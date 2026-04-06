@@ -4,4 +4,3 @@
 - SMA - Surface mount antenna connector - to connect an external antenna
 - Power supply : Board operates at +3.3 V - Has two decoupling capacitors to ensure proper operation of the LoRa module. To prevent voltage fluctuations from affecting the modules performance, especially during transmission
 
-0722250705
