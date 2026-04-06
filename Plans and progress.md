@@ -1,0 +1,24 @@
+- So where do i begin
+- I need directed effort, a routine, a system, a true understanding of what am doing
+- What are some of the things that need to be done:
+	- Blogging page
+	- LoRa deep dive
+	- C - structures + pointers + functions
+	- BLE app
+	- AODV routing
+- How do i go about scheduling,:
+- So here is what i will do : have weekly plans: what i need to do
+- For now , blogging is abit off, focus on the main thing. Document via Obsidian. Later i can blog if i want
+- I need enough sleep - meaning , cut off distractions - switch everything off by 9:00 pm
+- Its becoming hard to plan:
+- But i will :
+- This week
+	- Understand about the components that i need to buy - ESP32 + SX1276 ,. Use Random nerds website and check for tradeoffs in coming with discrete boards and buying integrated boards
+	- dive into the board + understand different boards - how it all works
+
+### March 29 20:23
+- I got the components
+- I need to know how am to progress this week:
+- I need to draft a working strategy tommorow
+- Tommorow morning: 3 hours: - Finance principles: + Video: + book 
+- Evening : reading: ESP testing  plan drafting: Getting to know the implemntation process:
