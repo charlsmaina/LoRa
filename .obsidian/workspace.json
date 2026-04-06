@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Project requirements.md",
+                "file": "documentation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Project requirements"
+              "title": "documentation"
             }
           }
         ]
@@ -185,11 +185,11 @@
   },
   "active": "85ee9ebdb637c321",
   "lastOpenFiles": [
-    "Plans and progress.md",
-    "Project requirements.md",
-    "Technical documentation.md",
-    "LoRa Rabbit holes.md",
     "Welcome.md",
+    "Plans and progress.md",
+    "documentation.md",
+    "Project requirements.md",
+    "LoRa Rabbit holes.md",
     "PCB design.md"
   ]
 }
