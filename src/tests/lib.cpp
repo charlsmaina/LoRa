@@ -65,6 +65,7 @@ void set_Mode(lora_mode_t mode)
 
 void set_lora_mode(void)
 {
+    set_Mode(SLEEP_MODE);
     uint8_t reg_value = readRegister(REG_OP_MODE);
     uint8_t lora_mode = (1 << 7) | reg_value;
     writeRegister(REG_OP_MODE, lora_mode);
