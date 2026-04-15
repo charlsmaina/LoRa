@@ -9,4 +9,8 @@ typedef enum
 
 } lora_mode_t;
 
+#define LORA_FR_MSB 0xD9
+#define LORA_FR_MID 0x00
+#define LORA_FR_LSB 0x00
+
 #endif

@@ -70,3 +70,10 @@ void set_lora_mode(void)
     uint8_t lora_mode = (1 << 7) | reg_value;
     writeRegister(REG_OP_MODE, lora_mode);
 }
+void set_op_frequency(void)
+{
+    set_Mode(STDBY_MODE);
+    writeRegister(REG_FR_MSB, LORA_FR_MSB);
+    writeRegister(REG_FR_MID, LORA_FR_MID);
+    writeRegister(REG_FR_LSB, LORA_FR_LSB);
+}

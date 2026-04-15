@@ -21,6 +21,8 @@ void setup()
 
   set_lora_mode();
   Serial.printf("New value of REG_OP_MODE: 0x%02X", readRegister(REG_OP_MODE));
+  set_op_frequency();
+  Serial.printf("\nNew op frequecy configuration\n: MSB: 0x%02X\n MID:0x%02X\n LSB: 0x%02X\n", readRegister(REG_FR_MSB), readRegister(REG_FR_MID), readRegister(REG_FR_LSB));
 }
 
 void loop()
