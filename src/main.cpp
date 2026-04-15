@@ -1,10 +1,10 @@
 
 
 #include <Arduino.h>
-#include "lora/lora_config.h"
-#include "tests/tests.h"
-
-#include "lora/lora_registers.h"
+#include "../include/lora/tests.h"
+#include "../include/lora/lora_config.h"
+#include "../include/lora/lora_registers.h"
+#include <SPI.h>
 
 void setup()
 {
@@ -17,7 +17,10 @@ void setup()
     Serial.printf("Initialization failed!\nSPI not working!!\n");
 
   printAllRegisters();
+
   set_Mode(SLEEP_MODE);
+  set_lora_mode();
+  Serial.printf("New value of REG_OP_MODE: 0x%02X", readRegister(REG_OP_MODE));
 }
 
 void loop()

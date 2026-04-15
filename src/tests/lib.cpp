@@ -1,10 +1,10 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#include "../../include/pin_config.h"
-#include "tests.h"
-#include "../lora/lora_registers.h"
-#include "../lora/lora_config.h"
+#include "../include/lora/lora_config.h"
+#include "../include/lora/tests.h"
+#include "../include/lora/lora_registers.h"
+#include "../include/lora/pin_config.h"
 
 uint8_t readRegister(uint8_t addr)
 {
@@ -61,4 +61,11 @@ void set_Mode(lora_mode_t mode)
     /*Clear last 3 bits and then set them to desired mode*/
     uint8_t value = ~(((1 << 3) - 1)) & reg_value | mode;
     writeRegister(REG_OP_MODE, value);
+}
+
+void set_lora_mode(void)
+{
+    uint8_t reg_value = readRegister(REG_OP_MODE);
+    uint8_t lora_mode = (1 << 7) | reg_value;
+    writeRegister(REG_OP_MODE, lora_mode);
 }
