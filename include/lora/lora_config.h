@@ -8,4 +8,5 @@ typedef enum
     RX_CONT = 0x05
 
 } lora_mode_t;
+
 #endif
