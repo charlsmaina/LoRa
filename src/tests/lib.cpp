@@ -4,6 +4,7 @@
 #include "../../include/pin_config.h"
 #include "tests.h"
 #include "../lora/lora_registers.h"
+#include "../lora/lora_config.h"
 
 uint8_t readRegister(uint8_t addr)
 {
@@ -22,7 +23,7 @@ void writeRegister(uint8_t addr, uint8_t value)
 }
 void lora_hardware_reset(void) // reset is active low
 {
-    pinMode(PIN_NSS, OUTPUT);
+
     digitalWrite(PIN_RESET, LOW);
     delay(10);
     digitalWrite(PIN_RESET, HIGH);
@@ -39,7 +40,25 @@ bool lora_init(void)
     SPI.setFrequency(1000000);
 
     if (readRegister(REG_REG_VERSION) == 0x12)
+
         return true;
     else
         return false;
+}
+void printAllRegisters(void)
+{
+    Serial.println("Address values");
+    for (uint8_t addr = 0x00; addr <= 0x10; addr++)
+    {
+        uint8_t val = readRegister(addr);
+        Serial.printf("Address:0x%02X :: Default value : 0x%02X\n", addr, val);
+    }
+}
+
+void set_Mode(lora_mode_t mode)
+{
+    uint8_t reg_value = readRegister(REG_OP_MODE);
+    /*Clear last 3 bits and then set them to desired mode*/
+    uint8_t value = ~(((1 << 3) - 1)) & reg_value | mode;
+    writeRegister(REG_OP_MODE, value);
 }
