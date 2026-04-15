@@ -77,3 +77,8 @@ void set_op_frequency(void)
     writeRegister(REG_FR_MID, LORA_FR_MID);
     writeRegister(REG_FR_LSB, LORA_FR_LSB);
 }
+void set_pa_config(void)
+{
+    set_Mode(STDBY_MODE);
+    writeRegister(REG_PA_CONFIG, LORA_PA_CONFIG);
+}

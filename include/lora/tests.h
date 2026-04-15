@@ -11,4 +11,5 @@ void printAllRegisters();
 void set_Mode(lora_mode_t mode);
 void set_lora_mode(void);
 void set_op_frequency(void);
+void set_pa_config(void);
 #endif
