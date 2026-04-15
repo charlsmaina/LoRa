@@ -9,24 +9,6 @@ This sketch is a test to check if SPI is working between the sx1276 chip and the
 - The whole read or write operation must be executed while the chip is selected: ie NSS should be low: NB: NSS is active LOW
 
 --------------------------------------------------------------------------------------------------------------
+
+-------The contents of this file were later moved into lib.cpp
 */
-
-#include "../../include/pin_config.h" // contains SPI pin mappings to ESP32
-#include <Arduino.h>
-#include <SPI.h>
-#include "tests.h"
-
-void setup()
-{
-
-    Serial.begin(115200);
-
-    lora_hardware_reset();
-
-    if (lora_init)
-        Serial.printf("Initialization successfull!\nSPI OK!\n");
-    else
-        Serial.printf("Initialization failed!\nSPI not working!!\n");
-}
-
-void loop() {}
