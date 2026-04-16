@@ -34,4 +34,6 @@ This file contain a collection of sx1276 registers addresses
 #define REG_DIO_MAPPING2 0x41           /*Mappings of DIO4 to DIO5,CLOCK frequency*/
 #define REG_REG_VERSION 0x42            /*Semtech ID relating the silicon revision*/
 #define REG_PA_DAC 0x4D
+#define REG_OCP 0x0B
+#define REG_SYMB_TIMEOUT_LSB 0x1F
 #endif

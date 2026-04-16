@@ -13,9 +13,11 @@ void setup()
 
   if (lora_init())
     Serial.printf("Initialization successfull!\nSPI OK!\n");
+
   else
-    set_lora_mode();
-  Serial.printf("Initialization failed!\nSPI not working!!\n");
+
+    Serial.printf("Initialization failed!\nSPI not working!!\n");
+  set_lora_mode();
 
   printAllRegisters();
 

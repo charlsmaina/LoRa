@@ -48,7 +48,7 @@ bool lora_init(void)
 void printAllRegisters(void)
 {
     Serial.println("Address values");
-    for (uint8_t addr = 0x00; addr <= 0x10; addr++)
+    for (uint8_t addr = 0x00; addr <= 0x20; addr++)
     {
         uint8_t val = readRegister(addr);
         Serial.printf("Address:0x%02X :: Default value : 0x%02X\n", addr, val);
@@ -81,4 +81,33 @@ void set_pa_config(void)
 {
     set_Mode(STDBY_MODE);
     writeRegister(REG_PA_CONFIG, LORA_PA_CONFIG);
+}
+void set_lna(void)
+{
+    set_Mode(STDBY_MODE);
+    writeRegister(REG_LNA, LORA_LNA);
+}
+void set_ocp(void)
+{
+    set_Mode(STDBY_MODE);
+    writeRegister(REG_OCP, LORA_OCP);
+}
+void lora_reg_config(uint8_t addr, uint8_t value)
+{
+    set_Mode(STDBY_MODE);
+    writeRegister(addr, value);
+}
+
+void reg_group_init(void)
+{
+    lora_reg_config(REG_FIFO_ADDR_PTR, LORA_FIFO_ADDR_PTR);
+    lora_reg_config(REG_FIFO_TX_BASE_ADDR, LORA_FIFO_TX_BASE_ADDR);
+    lora_reg_config(REG_FIFO_RX_BASE_ADDR, LORA_FIFO_RX_BASE_ADDR);
+    lora_reg_config(REG_IRQ__FLAGS_MASK, LORA_IRQ_FLAGS_MASK);
+    lora_reg_config(REG_MODEM_CONFIG1, LORA_MODEM_CONFIG1);
+    lora_reg_config(REG_MODEM_CONFIG2, LORA_MODEM_CONFIG2);
+    lora_reg_config(REG_SYMB_TIMEOUT_LSB, LORA_SYMB_TIMEOUT_LSB);
+    lora_reg_config(REG_PREAMBLE_MSB, LORA_PREAMBLE_MSB);
+    lora_reg_config(REG_PREAMBLE_LSB, LORA_PREAMBLE_LSB);
+    lora_reg_config(REG_SYNC_WORD, LORA_SYNC_WORD);
 }

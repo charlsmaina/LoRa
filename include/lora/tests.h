@@ -12,4 +12,7 @@ void set_Mode(lora_mode_t mode);
 void set_lora_mode(void);
 void set_op_frequency(void);
 void set_pa_config(void);
+void set_lna(void);
+void lora_reg_config(uint8_t addr, uint8_t value);
+void reg_group_init(void);
 #endif
