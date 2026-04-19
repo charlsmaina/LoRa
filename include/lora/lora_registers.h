@@ -36,4 +36,7 @@ This file contain a collection of sx1276 registers addresses
 #define REG_PA_DAC 0x4D
 #define REG_OCP 0x0B
 #define REG_SYMB_TIMEOUT_LSB 0x1F
+#define REG_RSSI_VALUE 0x1B     /*Indictes current RSSI in the channel*/
+#define REG_PKT_SNR_VALUE 0x19  /*Indicates the SNR of last packet received*/
+#define REG_PKT_RSSI_VALUE 0x1A /*RSSI value of last packet received*/
 #endif

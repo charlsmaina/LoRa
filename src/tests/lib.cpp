@@ -5,6 +5,7 @@
 #include "../include/lora/tests.h"
 #include "../include/lora/lora_registers.h"
 #include "../include/lora/pin_config.h"
+#include "inttypes.h"
 
 uint8_t readRegister(uint8_t addr)
 {
@@ -29,7 +30,7 @@ void lora_hardware_reset(void) // reset is active low
     digitalWrite(PIN_RESET, HIGH);
     delay(10);
 }
-bool lora_init(void)
+bool lora_spi_init(void)
 {
     pinMode(PIN_RESET, OUTPUT);
     lora_hardware_reset();
@@ -59,16 +60,14 @@ void set_Mode(lora_mode_t mode)
 {
     uint8_t reg_value = readRegister(REG_OP_MODE);
     /*Clear last 3 bits and then set them to desired mode*/
-    uint8_t value = ~(((1 << 3) - 1)) & reg_value | mode;
+    uint8_t value = (~(((1 << 3) - 1)) & reg_value) | mode;
     writeRegister(REG_OP_MODE, value);
 }
 
 void set_lora_mode(void)
 {
     set_Mode(SLEEP_MODE);
-    uint8_t reg_value = readRegister(REG_OP_MODE);
-    uint8_t lora_mode = (1 << 7) | reg_value;
-    writeRegister(REG_OP_MODE, lora_mode);
+    writeRegister(REG_OP_MODE, (1 << 7));
 }
 void set_op_frequency(void)
 {
@@ -79,6 +78,11 @@ void set_op_frequency(void)
 }
 void set_pa_config(void)
 {
+    /*This is about regulating the power levels during transmission:
+    Possible paths : PA_BOOST = Max output = +20dBm
+    RFO = Max output = +14dBm
+
+    */
     set_Mode(STDBY_MODE);
     writeRegister(REG_PA_CONFIG, LORA_PA_CONFIG);
 }
@@ -156,16 +160,21 @@ void receive(void)
 
     while (1)
     {
+
         uint8_t rx_done_reg = readRegister(REG_IRQ_FLAGS);
+
         if (rx_done_reg & (1 << 6))
         {
             set_Mode(STDBY_MODE);
             Serial.printf("Reception done!\n");
             writeRegister(REG_IRQ_FLAGS, (1 << 6));
+            uint16_t rssi = -157 + readRegister(REG_PKT_RSSI_VALUE);
+            Serial.printf("RSSI of last received packet: %" PRId16 "dBm", rssi);
             break;
         }
         else
         {
+
             if (millis() - start_time >= timeout)
             {
                 Serial.printf("Timeout exceeded:exiting listening \n");
@@ -184,7 +193,7 @@ void extract_fifo_payload(uint8_t rx_buffer[])
     {
         rx_buffer[i] = readRegister(REG_FIFO);
     }
-    Serial.printf("Extraction done:\n");
+    Serial.printf("\nExtraction done:\n");
     for (uint8_t i = 0; i < no_bytes; i++)
     {
         Serial.printf("Sent payload:  %c\n", rx_buffer[i]);
