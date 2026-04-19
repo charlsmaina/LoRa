@@ -15,4 +15,8 @@ void set_pa_config(void);
 void set_lna(void);
 void lora_reg_config(uint8_t addr, uint8_t value);
 void reg_group_init(void);
+void transmit(uint8_t data_buf[]);
+void receive(void);
+void extract_fifo_payload(uint8_t rx_buffer[]);
+
 #endif

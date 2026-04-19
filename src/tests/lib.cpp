@@ -111,3 +111,82 @@ void reg_group_init(void)
     lora_reg_config(REG_PREAMBLE_LSB, LORA_PREAMBLE_LSB);
     lora_reg_config(REG_SYNC_WORD, LORA_SYNC_WORD);
 }
+
+void transmit(uint8_t data_buff[])
+{
+    set_Mode(STDBY_MODE);
+    uint8_t fifo_tx_base_pointer = readRegister(REG_FIFO_TX_BASE_ADDR);
+    writeRegister(REG_FIFO_ADDR_PTR, fifo_tx_base_pointer);
+    for (uint8_t i = 0; i < 15; i++)
+    {
+        writeRegister(REG_FIFO, data_buff[i]);
+    }
+    writeRegister(REG_LORA_PAYLOAD_LENGTH, 15);
+    set_Mode(TX_MODE);
+
+    uint32_t start_time = millis();
+    uint32_t timeout = 5000;
+
+    while (1)
+    {
+        uint8_t tx_done_reg = readRegister(REG_IRQ_FLAGS);
+        if (tx_done_reg & (1 << 3))
+        {
+            Serial.printf("\nTransmission completed!\n");
+            writeRegister(REG_IRQ_FLAGS, (1 << 3));
+            break;
+        }
+        else if (millis() - start_time >= timeout)
+        {
+            Serial.printf("\nPayload transmission failed!\n");
+            break;
+        }
+    }
+}
+void receive(void)
+{
+    set_Mode(STDBY_MODE);
+    uint8_t fifo_rx_base_pointer = readRegister(REG_FIFO_RX_BASE_ADDR);
+    writeRegister(REG_FIFO_ADDR_PTR, fifo_rx_base_pointer);
+    set_Mode(RX_CONT);
+
+    uint32_t start_time = millis();
+    uint32_t timeout = 20000;
+    Serial.printf("Listening...");
+
+    while (1)
+    {
+        uint8_t rx_done_reg = readRegister(REG_IRQ_FLAGS);
+        if (rx_done_reg & (1 << 6))
+        {
+            set_Mode(STDBY_MODE);
+            Serial.printf("Reception done!\n");
+            writeRegister(REG_IRQ_FLAGS, (1 << 6));
+            break;
+        }
+        else
+        {
+            if (millis() - start_time >= timeout)
+            {
+                Serial.printf("Timeout exceeded:exiting listening \n");
+                set_Mode(STDBY_MODE);
+                break;
+            }
+        }
+    }
+}
+void extract_fifo_payload(uint8_t rx_buffer[])
+{
+    uint8_t no_bytes = readRegister(REG_RX_NB_BYTES);
+    uint8_t rx_current_address = readRegister(REG_FIFO_RX_CURRENT_ADDR);
+    writeRegister(REG_FIFO_ADDR_PTR, rx_current_address);
+    for (uint8_t i = 0; i < no_bytes; i++)
+    {
+        rx_buffer[i] = readRegister(REG_FIFO);
+    }
+    Serial.printf("Extraction done:\n");
+    for (uint8_t i = 0; i < no_bytes; i++)
+    {
+        Serial.printf("Sent payload:  %c\n", rx_buffer[i]);
+    }
+}

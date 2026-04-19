@@ -27,6 +27,23 @@ void setup()
   Serial.printf("\nNew op frequecy configuration\nMSB: 0x%02X\nMID:0x%02X\nLSB: 0x%02X\n", readRegister(REG_FR_MSB), readRegister(REG_FR_MID), readRegister(REG_FR_LSB));
   set_pa_config();
   Serial.printf("New PA configuration: 0x%02X", readRegister(REG_PA_CONFIG));
+
+  reg_group_init();
+
+  /*
+
+uint8_t data_buffer[] = "CHARLESMAINAKIN";
+  transmit(data_buffer);
+*/
+  /*
+
+  */
+
+  Serial.printf("Receiver\n");
+
+  uint8_t rx_buffer[15];
+  receive();
+  extract_fifo_payload(rx_buffer);
 }
 
 void loop()
