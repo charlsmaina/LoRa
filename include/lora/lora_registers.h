@@ -39,4 +39,5 @@ This file contain a collection of sx1276 registers addresses
 #define REG_RSSI_VALUE 0x1B     /*Indictes current RSSI in the channel*/
 #define REG_PKT_SNR_VALUE 0x19  /*Indicates the SNR of last packet received*/
 #define REG_PKT_RSSI_VALUE 0x1A /*RSSI value of last packet received*/
+#define REG_MODEM_CONFIG3 0x26
 #endif
