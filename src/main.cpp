@@ -5,6 +5,7 @@
 #include "../include/lora/lora_config.h"
 #include "../include/lora/lora_registers.h"
 #include <SPI.h>
+#include "tests/AODV_LORA/aodv_control.h"
 
 void setup()
 {
@@ -18,33 +19,10 @@ void setup()
     Serial.printf("Initialization failed!\nSPI not working!!\n");
 
   set_lora_mode();
-
-  Serial.printf("New value of REG_OP_MODE: 0x%02X", readRegister(REG_OP_MODE));
   set_op_frequency();
-  Serial.printf("\nNew op frequecy configuration\nMSB: 0x%02X\nMID:0x%02X\nLSB: 0x%02X\n", readRegister(REG_FR_MSB), readRegister(REG_FR_MID), readRegister(REG_FR_LSB));
   set_pa_config();
-  Serial.printf("\nNew PA configuration: 0x%02X", readRegister(REG_PA_CONFIG));
-
   reg_group_init();
-  Serial.printf("\nNew value of REG_OP_MODE: 0x%02X", readRegister(REG_OP_MODE));
-
-  uint8_t data_buffer[] = "CHARLESMAINAKIN";
-  transmit(data_buffer);
 }
-
-/*
-
-uint8_t data_buffer[] = "CHARLESMAINAKIN";
-transmit(data_buffer);
-*/
-/*
-Serial.printf("Receiver\n");
-
-uint8_t rx_buffer[15];
-receive();
-extract_fifo_payload(rx_buffer);
-}
-*/
 
 void loop()
 {
