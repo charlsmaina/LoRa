@@ -1,7 +1,8 @@
-#include <stdint.h>
+
 
 #ifndef AODV_CONTROL_H
 #define AODV_CONTROL_H
+#include <stdint.h>
 
 typedef struct
 {
@@ -24,6 +25,6 @@ typedef struct
     uint8_t dest_seq_number;
     uint8_t ori_ip;
     uint8_t lifetime;
-};
+} RREP_MESSAGE_t;
 
 #endif
