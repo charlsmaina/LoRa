@@ -13,4 +13,5 @@ This file contains the physical wiring mapping between the rfm95 and the esp32
 #define PIN_MISO 19
 #define PIN_MOSI 23
 #define PIN_SCK 18
+#define PIN_BLE_PROXY 5
 #endif

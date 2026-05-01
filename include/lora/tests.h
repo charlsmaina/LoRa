@@ -18,5 +18,7 @@ void reg_group_init(void);
 void transmit(uint8_t data_buf[]);
 void receive(void);
 void extract_fifo_payload(uint8_t rx_buffer[]);
-
+void interrupts_pins_setup();
+void IRAM_ATTR on_dio0_rise();
+void IRAM_ATTR there_is_payload_to_send();
 #endif

@@ -46,6 +46,20 @@ bool lora_spi_init(void)
     else
         return false;
 }
+
+void interrupts_pins_setup()
+{
+    attachInterrupt(PIN_DIO0, on_dio0_rise, RISING);
+    attachInterrupt(PIN_BLE_PROXY, there_is_payload_to_send, RISING);
+}
+
+void on_dio0_rise()
+{
+}
+void there_is_payload_to_send()
+{
+}
+
 void printAllRegisters(void)
 {
     Serial.println("Address values");
