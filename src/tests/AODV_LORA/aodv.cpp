@@ -1,6 +1,7 @@
-
+#include <Arduino.h>
+#include <SPI.h>
 #include "aodv_control.h"
-#include "../lib.cpp"
+#include "../../../include/lora/tests.h"
 #include "esp_random.h"
 
 RREQ_MESSAGE_t node_a_rreq;

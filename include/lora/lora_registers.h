@@ -19,11 +19,10 @@ This file contain a collection of sx1276 registers addresses
 #define REG_IRQ__FLAGS_MASK 0x11      /*Optional IRQ flag mask*/
 #define REG_IRQ_FLAGS 0x12            /*Interrupt requests flags*/
 #define REG_RX_NB_BYTES 0x13          /*Number of received bytes*/
-#define REG_PKT_SNR_VALUE 0x1A        /*Approximation of last packet SNR*/
-#define REG_PKT_RSSI_VALUE 0x1B       /*Current RSSI*/
-#define REG_MODEM_CONFIG1 0x1D        /*Modem PHY config 1*/
-#define REG_MODEM_CONFIG2 0x1E        /*Modem PHY config 2*/
-#define REG_PREAMBLE_MSB 0x20         /*Size of preamble*/
+
+#define REG_MODEM_CONFIG1 0x1D /*Modem PHY config 1*/
+#define REG_MODEM_CONFIG2 0x1E /*Modem PHY config 2*/
+#define REG_PREAMBLE_MSB 0x20  /*Size of preamble*/
 #define REG_PREAMBLE_LSB 0x21
 #define REG_LORA_PAYLOAD_LENGTH 0x22    /*LoRa payload length */
 #define REG_MAXIMUM_PAYLOAD_LENGTH 0x23 /*MAximum allowed payload*/

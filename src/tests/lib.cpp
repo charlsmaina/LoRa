@@ -7,6 +7,48 @@
 #include "../include/lora/pin_config.h"
 #include "inttypes.h"
 
+/*Queu variables*/
+
+Event queu[QUEU_SIZE];
+volatile int head = 0;
+volatile int tail = 0;
+
+/*---------------------------------Interrupts and queu logic-----------------------------------------*/
+
+void interrupts_pins_setup()
+{
+    pinMode(PIN_DIO0, INPUT);
+    pinMode(PIN_BLE_PROXY, INPUT_PULLDOWN);
+
+    attachInterrupt(digitalPinToInterrupt(PIN_DIO0), on_dio0_rise, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIN_BLE_PROXY), there_is_payload_to_send, RISING);
+}
+
+void enqueu(Event event_to_queu)
+{
+    if (((tail + 1) % QUEU_SIZE) == head)
+    {
+        printf("Queu full\n");
+        return;
+    }
+
+    queu[tail].type = event_to_queu.type;
+    tail = (tail + 1) % QUEU_SIZE;
+}
+Event dequeu(void)
+{
+    Event e = queu[head];
+    head = (head + 1) % QUEU_SIZE;
+    return e;
+}
+
+bool queu_is_empty()
+{
+    return (head == tail) ? true : false;
+}
+
+/*---------------------------------- End of queu logic-------------------------------------------------------------*/
+
 uint8_t readRegister(uint8_t addr)
 {
     digitalWrite(PIN_NSS, LOW);
@@ -29,6 +71,7 @@ void lora_hardware_reset(void) // reset is active low
     delay(10);
     digitalWrite(PIN_RESET, HIGH);
     delay(10);
+    digitalWrite(PIN_BLE_PROXY, HIGH);
 }
 bool lora_spi_init(void)
 {
@@ -45,19 +88,6 @@ bool lora_spi_init(void)
         return true;
     else
         return false;
-}
-
-void interrupts_pins_setup()
-{
-    attachInterrupt(PIN_DIO0, on_dio0_rise, RISING);
-    attachInterrupt(PIN_BLE_PROXY, there_is_payload_to_send, RISING);
-}
-
-void on_dio0_rise()
-{
-}
-void there_is_payload_to_send()
-{
 }
 
 void printAllRegisters(void)
@@ -132,6 +162,7 @@ void reg_group_init(void)
 
 void transmit(uint8_t data_buff[])
 {
+    digitalWrite(PIN_BLE_PROXY, LOW); /*Reset the ready to send interrupt*/
     set_Mode(STDBY_MODE);
     uint8_t fifo_tx_base_pointer = readRegister(REG_FIFO_TX_BASE_ADDR);
     writeRegister(REG_FIFO_ADDR_PTR, fifo_tx_base_pointer);
