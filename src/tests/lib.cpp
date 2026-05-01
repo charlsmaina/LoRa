@@ -18,7 +18,6 @@ volatile int tail = 0;
 void interrupts_pins_setup()
 {
     pinMode(PIN_DIO0, INPUT);
-    pinMode(PIN_BLE_PROXY, INPUT_PULLDOWN);
 
     attachInterrupt(digitalPinToInterrupt(PIN_DIO0), on_dio0_rise, RISING);
     attachInterrupt(digitalPinToInterrupt(PIN_BLE_PROXY), there_is_payload_to_send, RISING);
@@ -28,7 +27,6 @@ void enqueu(Event event_to_queu)
 {
     if (((tail + 1) % QUEU_SIZE) == head)
     {
-        printf("Queu full\n");
         return;
     }
 
@@ -158,12 +156,28 @@ void reg_group_init(void)
     lora_reg_config(REG_PREAMBLE_MSB, LORA_PREAMBLE_MSB);
     lora_reg_config(REG_PREAMBLE_LSB, LORA_PREAMBLE_LSB);
     lora_reg_config(REG_SYNC_WORD, LORA_SYNC_WORD);
+
+    /*AI generated:: for interuupt mapping: */
+    uint8_t dio = readRegister(REG_DIO_MAPPING1);
+    dio &= 0x3F;
+    writeRegister(REG_DIO_MAPPING1, dio);
 }
 
 void transmit(uint8_t data_buff[])
 {
-    digitalWrite(PIN_BLE_PROXY, LOW); /*Reset the ready to send interrupt*/
+
     set_Mode(STDBY_MODE);
+
+    /*AI generated : ---verify later:*/
+    //  ADD: DIO0 → TxDone (bits[7:6] = 01)
+    uint8_t dio = readRegister(REG_DIO_MAPPING1);
+    dio &= 0x3F;
+    dio |= 0x40;
+    writeRegister(REG_DIO_MAPPING1, dio);
+
+    // ADD: Clear stale IRQ flags
+
+    writeRegister(REG_IRQ_FLAGS, 0xFF);
     uint8_t fifo_tx_base_pointer = readRegister(REG_FIFO_TX_BASE_ADDR);
     writeRegister(REG_FIFO_ADDR_PTR, fifo_tx_base_pointer);
     for (uint8_t i = 0; i < 15; i++)
@@ -195,6 +209,13 @@ void transmit(uint8_t data_buff[])
 void receive(void)
 {
     set_Mode(STDBY_MODE);
+    // ✅ ADD: DIO0 → RxDone (bits[7:6] = 00)
+    uint8_t dio = readRegister(REG_DIO_MAPPING1);
+    dio &= 0x3F;
+    writeRegister(REG_DIO_MAPPING1, dio);
+
+    // ✅ ADD: Clear stale IRQ flags
+    writeRegister(REG_IRQ_FLAGS, 0xFF);
     uint8_t fifo_rx_base_pointer = readRegister(REG_FIFO_RX_BASE_ADDR);
     writeRegister(REG_FIFO_ADDR_PTR, fifo_rx_base_pointer);
     set_Mode(RX_CONT);
@@ -241,6 +262,6 @@ void extract_fifo_payload(uint8_t rx_buffer[])
     Serial.printf("\nExtraction done:\n");
     for (uint8_t i = 0; i < no_bytes; i++)
     {
-        Serial.printf("Sent payload:  %c\n", rx_buffer[i]);
+        Serial.printf("Sent payload:  %u\n", rx_buffer[i]);
     }
 }

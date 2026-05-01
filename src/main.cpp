@@ -25,8 +25,14 @@ void IRAM_ATTR there_is_payload_to_send()
 
 void setup()
 {
-  trasmitter_buffer[100] = {55};     /*senders only for now*/
-  digitalWrite(PIN_BLE_PROXY, HIGH); /*Sender*/
+  /*senders only for now*/
+  uint8_t x = 77;
+  for (uint8_t i = 0; i < 100; i++)
+  {
+    trasmitter_buffer[i] = x;
+  }
+
+  // digitalWrite(PIN_BLE_PROXY, HIGH); /*Sender*/
 
   Serial.begin(115200);
 
@@ -43,23 +49,37 @@ void setup()
 
   interrupts_pins_setup();
   set_Mode(RX_CONT);
+  delay(1000);
+  receive();
+
+  /*
+  ---------------------TX simulation-------------------------
+   pinMode(PIN_BLE_PROXY, INPUT);
+    digitalWrite(PIN_BLE_PROXY, LOW);
+  */
 }
 
 void loop()
 {
+
   if (!queu_is_empty())
   {
     Event e = dequeu();
     switch (e.type)
     {
     case RX_COMPLETE:
+      printf("Extraction requirement detected:\n");
       extract_fifo_payload(extraction_buffer);
       set_Mode(RX_CONT);
+      receive();
+
       break;
     case TX_READY:
       transmit(trasmitter_buffer);
-      set_Mode(RX_CONT);
+      printf("Transmission requirement detected:\n");
+
       break;
     }
   }
+  delay(1000);
 }
