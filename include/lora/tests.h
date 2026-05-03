@@ -3,6 +3,16 @@
 #include <stdint.h>
 #include "lora_config.h"
 #define QUEU_SIZE 8
+#define DIO0_MAP_TX_DONE (0X01u << 6)
+#define DIO0_MAP_RX_DONE (0X00u << 6)
+#define DIOO_MAP_CAD_DONE (0x01u << 7)
+
+/*Setting of the differrnt flags*/
+#define RX_DONE_MASK (0X01u << 6)
+#define TX_DONE_MASK (0X01u << 3)
+#define PAYLOAD_CRC_ERROR_MASK (0X01u << 5)
+#define CAD_DONE_MASK (0X01u << 2)
+#define CAD_DETECTED_MASK 0X01
 
 typedef enum
 {

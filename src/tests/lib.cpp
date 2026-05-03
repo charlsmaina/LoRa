@@ -167,15 +167,7 @@ void transmit(uint8_t data_buff[])
 {
 
     set_Mode(STDBY_MODE);
-
-    /*AI generated : ---verify later:*/
-    //  ADD: DIO0 → TxDone (bits[7:6] = 01)
-    uint8_t dio = readRegister(REG_DIO_MAPPING1);
-    dio &= 0x3F;
-    dio |= 0x40;
-    writeRegister(REG_DIO_MAPPING1, dio);
-
-    // ADD: Clear stale IRQ flags
+    writeRegister(REG_DIO_MAPPING1, DIO0_MAP_TX_DONE);
 
     writeRegister(REG_IRQ_FLAGS, 0xFF);
     uint8_t fifo_tx_base_pointer = readRegister(REG_FIFO_TX_BASE_ADDR);
