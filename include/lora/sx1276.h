@@ -5,6 +5,9 @@ This file contain a collection of sx1276 registers addresses
 */
 #ifndef SX1276_H
 #define SX1276_H
+
+#include <stdint.h>
+
 #define REG_FIFO 0x00                 /*FIFO read/write access*/
 #define REG_OP_MODE 0x01              /*Operating mode selection: LoRa or FSK*/
 #define REG_FR_MSB 0x06               /*RF carrier frequency most significant byte*/
@@ -39,4 +42,16 @@ This file contain a collection of sx1276 registers addresses
 #define REG_PKT_SNR_VALUE 0x19  /*Indicates the SNR of last packet received*/
 #define REG_PKT_RSSI_VALUE 0x1A /*RSSI value of last packet received*/
 #define REG_MODEM_CONFIG3 0x26
+
+/*sx1276  driver functions*/
+void writeRegister(uint8_t addr, uint8_t value);
+uint8_t readRegister(uint8_t addr);
+bool lora_spi_init(void);
+void lora_hardware_reset(void);
+
+typedef void(*ble_proxy_callback_t);
+typedef void (*dio0_callback_t)(void);
+
+void interrupts_pins_setup(dio0_callback_t dio0_cb, ble_proxy_callback_t ble_proxy_cb);
+
 #endif
