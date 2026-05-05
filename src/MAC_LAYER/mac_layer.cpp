@@ -3,38 +3,75 @@
 #include "../include/lora/radio_control.h"
 uint8_t rx_buffer[]; /*This has to be passed from the application level or??*/
 
+typedef enum
+{
+    PAYLOAD,
+    RREQ,
+    RREP,
+    RERR,
+    RTS,
+    RTR,
+
+} defined_messages_t;
+
 uint8_t *pay_load_type(void)
 {
     return check_payload_type(extract_fifo_payload(rx_buffer));
 }
+
 uint8_t *check_payload_type(uint8_t *payload_pointer)
 {
     switch (*payload_pointer)
     {
-    case 0x00:
+    case PAYLOAD:
         /*Call a aodv function to handle payload*/
         break;
-    case 0x01:
+    case RREQ:
         /*Call a aodv function to handle rreq*/
         break;
-    case 0x02:
+    case RREP:
         /*Call a aodv function to handle rrep*/
         break;
-    case 0x03:
+    case RERR:
         /*Call a aodv function to handle rerr*/
         break;
-    case 0x04:
+    case RTS:
         /*Call a aodv function to handle rts*/
         break;
-    case 0x05:
+    case RTR:
         /*Call a aodv function to handle rtr*/
-        break;
-    case 0x06:
-        /*Call a aodv function to handle*/
         break;
 
     default:
         Serial.printf("Undefined payload type:\n");
+        break;
+    }
+}
+
+uint8_t message_frame(defined_messages_t type, uint8_t *routetable)
+{
+    switch (type)
+    {
+    case PAYLOAD:
+        /*Write a payload handler  */
+        break;
+    case RREQ:
+        /*Write a route request handler  */
+        break;
+    case RREP:
+        /*Write a route reply handler*/
+        break;
+    case RERR:
+        /*Write a route error handler*/
+        break;
+    case RTS:
+        /*write a route RTS handler*/
+        break;
+    case RTR:
+        /*Write a RTR handler*/
+        break;
+
+    default:
         break;
     }
 }
