@@ -53,19 +53,20 @@ uint8_t message_frame(defined_messages_t type, uint8_t *routetable)
     switch (type)
     {
     case PAYLOAD:
-        /*Write a payload handler  */
+        /*Write a payload message frame */
+
         break;
     case RREQ:
-        /*Write a route request handler  */
+        /*Write a route request message frame */
         break;
     case RREP:
-        /*Write a route reply handler*/
+        /*Write a route reply message frame*/
         break;
     case RERR:
-        /*Write a route error handler*/
+        /*Write a route error message frame*/
         break;
     case RTS:
-        /*write a route RTS handler*/
+        /*write a route RTS message frame*/
         break;
     case RTR:
         /*Write a RTR handler*/
