@@ -7,14 +7,14 @@ void set_Mode(lora_mode_t mode)
 {
     uint8_t reg_value = readRegister(REG_OP_MODE);
     /*Clear last 3 bits and then set them to desired mode*/
-    uint8_t value = (~(((1 << 3) - 1)) & reg_value) | mode;
+    uint8_t value = (~(((0X01 << 3) - 1)) & reg_value) | mode;
     writeRegister(REG_OP_MODE, value);
 }
 
 void set_lora_mode(void)
 {
     set_Mode(SLEEP_MODE);
-    writeRegister(REG_OP_MODE, (1 << 7));
+    writeRegister(REG_OP_MODE, (0X01 << 7));
 }
 void set_op_frequency(void)
 {
