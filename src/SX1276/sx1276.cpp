@@ -50,11 +50,9 @@ void interrupts_pins_setup(dio0_callback_t dio0_cb, ble_proxy_callback_t ble_pro
 {
     dio0_cb = on_dio0_rise;
     ble_proxy_cb = on_ble_proxy_rise;
-}
 
-void interrupts_pins_setup()
-{
     pinMode(PIN_DIO0, INPUT);
+    pinMode(PIN_BLE_PROXY, INPUT);
 
     attachInterrupt(digitalPinToInterrupt(PIN_DIO0), on_dio0_rise, RISING);
     attachInterrupt(digitalPinToInterrupt(PIN_BLE_PROXY), on_ble_proxy_rise, RISING);
