@@ -74,10 +74,26 @@ void writeRegister(uint8_t addr, uint8_t value);
 uint8_t readRegister(uint8_t addr);
 bool lora_spi_init(void);
 void lora_hardware_reset(void);
+typedef enum
+{
+    SLEEP_MODE = 0x00,
+    STDBY_MODE = 0x01,
+    TX_MODE = 0x03,
+    RX_CONT = 0x05
 
-typedef void(*ble_proxy_callback_t);
-typedef void (*dio0_callback_t)(void);
+} lora_mode_t;
 
-void interrupts_pins_setup(dio0_callback_t dio0_cb, ble_proxy_callback_t ble_proxy_cb);
+void set_Mode(lora_mode_t mode);
+void set_lora_mode(void);
+void set_op_frequency(void);
+void set_pa_config(void);
+void set_lna(void);
+void set_ocp(void);
+void lora_reg_config(uint8_t addr, uint8_t value);
+void reg_group_init(void);
 
+void IRAM_ATTR dio0_isr(void);
+bool poll_dio0(void);
+
+void interrupts_pins_setup();
 #endif
