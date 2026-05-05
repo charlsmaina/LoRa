@@ -1,18 +1,19 @@
 #include <Arduino.h>
 
 #include "../include/lora/radio_control.h"
-uint8_t rx_buffer[]; /*This has to be passed from the application level or??*/
+#include "../include/lora/mac_layer.h"
 
-typedef enum
+static uint8_t rx_buffer[];
+static payload_cb_t payload_cb = NULL;
+static rreq_cb_t rreq_cb = NULL;
+static rrep_cb_t rrep_cb = NULL;
+
+void mac_callbacks_init(payload_cb_t payload, rreq_cb_t rreq, rrep_cb_t rrep)
 {
-    PAYLOAD,
-    RREQ,
-    RREP,
-    RERR,
-    RTS,
-    RTR,
-
-} defined_messages_t;
+    payload_cb = payload;
+    rreq_cb = rreq;
+    rrep_cb = rrep;
+}
 
 uint8_t *pay_load_type(void)
 {
@@ -25,9 +26,10 @@ uint8_t *check_payload_type(uint8_t *payload_pointer)
     {
     case PAYLOAD:
         /*Call a aodv function to handle payload*/
+
         break;
     case RREQ:
-        /*Call a aodv function to handle rreq*/
+        /*Call a aodv funcuint8_t message_frame(void);tion to handle rreq*/
         break;
     case RREP:
         /*Call a aodv function to handle rrep*/
