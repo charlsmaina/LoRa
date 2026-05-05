@@ -15,6 +15,8 @@
 #define CAD_DONE_MASK (0X01u << 2)
 #define CAD_DETECTED_MASK 0X01
 
+static uint8_t op_mode_before_dio0_fired;
+
 void radio_ini(void)
 {
     lora_hardware_reset();
@@ -39,7 +41,7 @@ void radio_control_tick(void)
 {
     if (poll_dio0())
     {
-        switch (readRegister(REG_OP_MODE) & 0X07)
+        switch (op_mode_before_dio0_fired)
         {
         case TX_MODE:
             if (tx_done_cb)
@@ -63,6 +65,7 @@ void radio_control_tick(void)
 }
 void transmit(uint8_t transmit_buffer[])
 {
+    op_mode_before_dio0_fired = TX_MODE;
     set_Mode(STDBY_MODE);
     writeRegister(REG_DIO_MAPPING1, DIO0_MAP_TX_DONE);
     writeRegister(REG_IRQ__FLAGS_MASK, TX_DONE_MASK);
@@ -72,5 +75,73 @@ void transmit(uint8_t transmit_buffer[])
     {
         writeRegister(REG_FIFO, transmit_buffer[i]);
     }
+    writeRegister(REG_FIFO, transmit_buffer[i]);
     writeRegister(REG_LORA_PAYLOAD_LENGTH, i);
+    set_Mode(TX_MODE);
+
+    uint32_t start_time = millis();
+    uint32_t timeout = 3000; /*wait for this time to see if transmission happens: may introduce latency*/
+
+    while (1)
+    {
+        uint8_t tx_done_reg = readRegister(REG_IRQ_FLAGS);
+        if ((tx_done_reg & (0X01 << 3)) == 0X00)
+        {
+            Serial.printf("\nTransmission completed!\n");
+            break;
+        }
+        else if (millis() - start_time >= timeout)
+        {
+            Serial.printf("\nTransmission failed!\n");
+            break;
+        }
+    }
+}
+
+void receive(void)
+{
+    op_mode_before_dio0_fired = RX_CONT_MODE;
+    set_Mode(STDBY_MODE);
+    writeRegister(REG_DIO_MAPPING1, DIO0_MAP_RX_DONE);
+    writeRegister(REG_IRQ__FLAGS_MASK, TX_DONE_MASK);
+    writeRegister(REG_IRQ__FLAGS_MASK, PAYLOAD_CRC_ERROR_MASK);
+    set_Mode(RX_CONT_MODE);
+    uint32_t start_time = millis();
+    uint32_t timeout = 3000;
+    Serial.printf("\nListening...");
+
+    while (1)
+    {
+        uint8_t reg_irq_flags = readRegister(REG_IRQ_FLAGS);
+
+        if ((reg_irq_flags & (0x01 << 6)) == 0x00)
+        {
+            Serial.printf("\nReception done:\n");
+            set_Mode(STDBY_MODE);
+            break;
+        }
+    }
+}
+
+uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
+{
+    uint8_t no_bytes = readRegister(REG_RX_NB_BYTES);
+    uint8_t rx_current_address = readRegister(REG_FIFO_RX_CURRENT_ADDR);
+    writeRegister(REG_FIFO_ADDR_PTR, rx_current_address);
+
+    uint8_t reg_irq_flags = readRegister(REG_IRQ_FLAGS);
+
+    if ((reg_irq_flags & (0X01 << 5)) == 0x00)
+    {
+        Serial.printf("\nNo CRC error detected");
+        for (uint8_t i = 0; i < no_bytes; i++)
+        {
+            rx_buffer[i] = readRegister(REG_FIFO);
+        }
+        Serial.printf("\nExtraction done:\n");
+        return rx_buffer;
+    }
+
+    else
+        Serial.printf("CRC error detected:payload dropped");
 }
