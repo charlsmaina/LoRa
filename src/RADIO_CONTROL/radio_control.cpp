@@ -30,9 +30,9 @@ void radio_ini(void)
     set_ocp();
     reg_group_init();
     interrupts_pins_setup();
-    writeRegister(REG_IRQ__FLAGS_MASK, ~(RELEVANT_MASKS));
-    receive();
+
     printf("Radio initialization done:\n");
+    receive();
 }
 static dio0_callback tx_done_cb = nullptr;
 static dio0_callback rx_done_cb = nullptr;
@@ -74,8 +74,9 @@ void radio_control_tick(void)
         }
     }
 }
-void transmit(uint8_t transmit_buffer[], uint8_t len)
+void transmit(uint8_t *transmit_buffer, uint8_t len)
 {
+    Serial.printf("Transmission about to kick off:\n");
     op_mode_before_dio0_fired = TX_MODE;
     set_Mode(STDBY_MODE);
     writeRegister(REG_DIO_MAPPING1, DIO0_MAP_TX_DONE);
@@ -90,20 +91,6 @@ void transmit(uint8_t transmit_buffer[], uint8_t len)
 
     writeRegister(REG_LORA_PAYLOAD_LENGTH, i);
     set_Mode(TX_MODE);
-
-    /*Confirmation:*/
-    set_Mode(TX_MODE);
-
-    // verify TX mode set
-    uint8_t mode = readRegister(REG_OP_MODE);
-    uint8_t irq_flags = readRegister(REG_IRQ_FLAGS);
-    Serial.printf("TX OpMode: 0x%02X\n", mode); // expect 0x83
-    Serial.printf("TX IRQ flags: 0x%02X\n", irq_flags);
-
-    // wait briefly and check again
-    delay(500);
-    irq_flags = readRegister(REG_IRQ_FLAGS);
-    Serial.printf("TX IRQ flags after 500ms: 0x%02X\n", irq_flags); // bit 3 should be set
 }
 
 void receive(void)
@@ -114,13 +101,6 @@ void receive(void)
 
     set_Mode(RX_CONT_MODE);
     Serial.printf("\nListening...");
-    // verify
-    uint8_t mode = readRegister(REG_OP_MODE);
-    uint8_t dio_map = readRegister(REG_DIO_MAPPING1);
-    uint8_t irq_mask = readRegister(REG_IRQ__FLAGS_MASK);
-    Serial.printf("OpMode: 0x%02X\n", mode);       // expect 0x85
-    Serial.printf("DIO map: 0x%02X\n", dio_map);   // expect 0x00
-    Serial.printf("IRQ mask: 0x%02X\n", irq_mask); // expect 0x
 }
 
 uint8_t *extract_fifo_payload(uint8_t rx_buffer[], uint8_t *no_bytes)

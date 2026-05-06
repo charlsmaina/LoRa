@@ -16,13 +16,12 @@ static void mac_on_rx_done(void);
 
 void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rrep_handler)
 {
-
+    radio_ini();
     payload_mac_aodv_cb = payload_handler;
     rreq_mac_aodv_cb = rreq_handler;
     rrep_mac_aodv_cb = rrep_handler;
 
     radio_init(mac_on_tx_done, mac_on_rx_done);
-    radio_ini();
 }
 void mac_forward(uint8_t *buf, uint8_t len)
 {
@@ -55,6 +54,7 @@ static void mac_on_rx_done(void)
         /*Call a aodv call back function to handle payload*/
         if (payload_mac_aodv_cb)
         {
+            printf("Payload received:\n");
             payload_mac_aodv_cb(payload_pointer, no_bytes);
         }
 
@@ -63,6 +63,7 @@ static void mac_on_rx_done(void)
         /*Call a aodv funcuint8_t message_frame(void);tion to handle rreq*/
         if (rreq_mac_aodv_cb)
         {
+            Serial.printf("RREQ message detected:\n");
             rreq_mac_aodv_cb((RREQ_MESSAGE_t *)payload_pointer);
         }
 
@@ -70,6 +71,7 @@ static void mac_on_rx_done(void)
     case RREP_MSG:
         if (rrep_mac_aodv_cb)
         {
+            Serial.printf("Route repply message detected:\n");
             rrep_mac_aodv_cb((RREP_MESSAGE_t *)payload_pointer);
         }
 
@@ -109,7 +111,7 @@ void mac_send_rreq(RREQ_MESSAGE_t *rreq)
 }
 void mac_send_rrep(RREP_MESSAGE_t *rrep)
 {
-    rrep->type = RREQ_MSG;
+    rrep->type = RREP_MSG;
     memcpy(tx_buffer, rrep, sizeof(RREP_MESSAGE_t));
     mac_forward(tx_buffer, sizeof(RREP_MESSAGE_t));
 }

@@ -7,7 +7,7 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
-#define MY_NODE_ID NODE_A
+#define MY_NODE_ID NODE_B
 #define MAX_ROUTES 6
 
 typedef struct
@@ -46,7 +46,9 @@ void aodv_init(void)
 
 static void payload_handler(uint8_t *buf, uint8_t len)
 {
-    uint8_t dest = buf[1];
+    Serial.printf("Payload handler called:\n");
+    /*uint8_t dest = buf[1];
+
     if (dest != MY_NODE_ID)
 
     {
@@ -57,12 +59,12 @@ static void payload_handler(uint8_t *buf, uint8_t len)
         }
 
         return;
-    }
+    }*/
 
     Serial.printf("Payload received, len %0X\nData:\n", len);
     for (uint8_t i = 0; i < len; i++)
     {
-        Serial.printf("%0X", buf[i]);
+        Serial.printf("%c", buf[i]);
     }
     Serial.println();
 }
@@ -110,6 +112,8 @@ static void aodv_send_rreq(uint8_t dest)
     rreq.ori_ip = MY_NODE_ID;
     rreq.ori_seq_number = node_sequence_number++;
 
+    Serial.printf("Sent dest ip:0X%02X\nSent orig_ip :0x%02X\n", rreq.dest_ip, rreq.ori_ip);
+
     mac_send_rreq(&rreq);
 }
 
@@ -128,6 +132,7 @@ static void add_route_to_sender(uint8_t dest, uint8_t src_ip, uint8_t hop_count)
     }
     for (uint8_t i = 0; i < MAX_ROUTES; i++)
     {
+        Serial.printf("New route created:\n");
         if (!route_table[i].valid)
         {
             route_table[i].dest_ip = dest;
@@ -141,7 +146,11 @@ static void add_route_to_sender(uint8_t dest, uint8_t src_ip, uint8_t hop_count)
 /*RREQ and RREP handlers*/
 static void rreq_handler(RREQ_MESSAGE_t *rreq)
 {
+    Serial.printf("HAnndle rreq:\n");
     add_route_to_sender(rreq->dest_ip, rreq->src_ip, rreq->hop_count);
+    Serial.printf("Destination: 0X%02X\n Origin: 0X%02X\n", rreq->dest_ip, rreq->ori_ip);
+
+    Serial.printf("Current destination:0X%02X\n", MY_NODE_ID);
     if (rreq->dest_ip == MY_NODE_ID)
     {
         Serial.printf("\nAm destination\n");
@@ -170,6 +179,7 @@ static void aodv_send_rrep(RREQ_MESSAGE_t *rreq)
 
 static void rrep_handler(RREP_MESSAGE_t *rrep)
 {
+    Serial.printf("Route reply detected:\n");
     add_route_to_sender(rrep->dest_ip, rrep->src_ip, rrep->hop_count);
     if (rrep->ori_ip == MY_NODE_ID)
     {
@@ -194,7 +204,9 @@ static void aodv_drain_queue(void)
 {
     if (pending.valid)
     {
+
         mac_send_payload(pending.buf, pending.len);
+        Serial.printf("Payload sent:\n");
         pending.valid = false;
     }
 }

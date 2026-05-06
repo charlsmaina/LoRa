@@ -3,10 +3,10 @@
 #ifndef AODV_CONTROL_H
 #define AODV_CONTROL_H
 #include <stdint.h>
-#define NODE_A 0X00
-#define NODE_B 0X01
-#define NODE_C 0X02
-#define NODE_D 0X03
+#define NODE_A 0X20
+#define NODE_B 0X21
+#define NODE_C 0X22
+#define NODE_D 0X23
 
 void aodv_init(void);
 uint8_t next_hop_route_table_lookup(uint8_t dest);
