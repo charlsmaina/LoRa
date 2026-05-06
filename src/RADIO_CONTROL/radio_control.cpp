@@ -5,7 +5,7 @@
 
 /*Setting the DIo0 pin interrupt signal*/
 #define DIO0_MAP_TX_DONE (0X01u << 6)
-#define DIO0_MAP_RX_DONE (0X00u << 6)
+#define DIO0_MAP_RX_DONE 0X00
 #define DIOO_MAP_CAD_DONE (0x01u << 7)
 
 /*Setting of the differrnt flags*/
@@ -14,8 +14,9 @@
 #define PAYLOAD_CRC_ERROR_MASK (0X01u << 5)
 #define CAD_DONE_MASK (0X01u << 2)
 #define CAD_DETECTED_MASK 0X01
+#define RELEVANT_MASKS (RX_DONE_MASK | TX_DONE_MASK | PAYLOAD_CRC_ERROR_MASK | CAD_DONE_MASK | CAD_DETECTED_MASK)
 
-static uint8_t op_mode_before_dio0_fired;
+static uint8_t op_mode_before_dio0_fired = STDBY_MODE;
 
 void radio_ini(void)
 {
@@ -28,9 +29,11 @@ void radio_ini(void)
     set_ocp();
     reg_group_init();
     interrupts_pins_setup();
+    writeRegister(REG_IRQ__FLAGS_MASK, ~RELEVANT_MASKS);
 }
 static dio0_callback tx_done_cb = nullptr;
 static dio0_callback rx_done_cb = nullptr;
+
 void radio_callbacks_init(dio0_callback tx_done_handler, dio0_callback rx_done_handler)
 {
     tx_done_cb = tx_done_handler;
@@ -44,6 +47,7 @@ void radio_control_tick(void)
         switch (op_mode_before_dio0_fired)
         {
         case TX_MODE:
+            writeRegister(REG_IRQ_FLAGS, TX_DONE_MASK);
             if (tx_done_cb)
             {
                 tx_done_cb();
@@ -51,6 +55,7 @@ void radio_control_tick(void)
 
             break;
         case RX_CONT_MODE:
+            writeRegister(REG_IRQ_FLAGS, RX_DONE_MASK);
             if (rx_done_cb)
             {
                 rx_done_cb();
@@ -63,39 +68,22 @@ void radio_control_tick(void)
         }
     }
 }
-void transmit(uint8_t transmit_buffer[])
+void transmit(uint8_t transmit_buffer[], uint8_t len)
 {
     op_mode_before_dio0_fired = TX_MODE;
     set_Mode(STDBY_MODE);
     writeRegister(REG_DIO_MAPPING1, DIO0_MAP_TX_DONE);
-    writeRegister(REG_IRQ__FLAGS_MASK, TX_DONE_MASK);
+
     uint8_t fifo_tx_base_pointer = readRegister(REG_FIFO_TX_BASE_ADDR);
+    writeRegister(REG_FIFO_ADDR_PTR, fifo_tx_base_pointer);
     int8_t i;
-    for (i = 0; transmit_buffer[i] != '\0'; i++)
+    for (i = 0; i < len; i++)
     {
         writeRegister(REG_FIFO, transmit_buffer[i]);
     }
-    writeRegister(REG_FIFO, transmit_buffer[i]);
+
     writeRegister(REG_LORA_PAYLOAD_LENGTH, i);
     set_Mode(TX_MODE);
-
-    uint32_t start_time = millis();
-    uint32_t timeout = 3000; /*wait for this time to see if transmission happens: may introduce latency*/
-
-    while (1)
-    {
-        uint8_t tx_done_reg = readRegister(REG_IRQ_FLAGS);
-        if ((tx_done_reg & (0X01 << 3)) == 0X00)
-        {
-            Serial.printf("\nTransmission completed!\n");
-            break;
-        }
-        else if (millis() - start_time >= timeout)
-        {
-            Serial.printf("\nTransmission failed!\n");
-            break;
-        }
-    }
 }
 
 void receive(void)
@@ -103,24 +91,9 @@ void receive(void)
     op_mode_before_dio0_fired = RX_CONT_MODE;
     set_Mode(STDBY_MODE);
     writeRegister(REG_DIO_MAPPING1, DIO0_MAP_RX_DONE);
-    writeRegister(REG_IRQ__FLAGS_MASK, TX_DONE_MASK);
-    writeRegister(REG_IRQ__FLAGS_MASK, PAYLOAD_CRC_ERROR_MASK);
+
     set_Mode(RX_CONT_MODE);
-    uint32_t start_time = millis();
-    uint32_t timeout = 3000;
     Serial.printf("\nListening...");
-
-    while (1)
-    {
-        uint8_t reg_irq_flags = readRegister(REG_IRQ_FLAGS);
-
-        if ((reg_irq_flags & (0x01 << 6)) == 0x00)
-        {
-            Serial.printf("\nReception done:\n");
-            set_Mode(STDBY_MODE);
-            break;
-        }
-    }
 }
 
 uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
@@ -131,7 +104,7 @@ uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
 
     uint8_t reg_irq_flags = readRegister(REG_IRQ_FLAGS);
 
-    if ((reg_irq_flags & (0X01 << 5)) == 0x00)
+    if (!(reg_irq_flags & PAYLOAD_CRC_ERROR_MASK))
     {
         Serial.printf("\nNo CRC error detected");
         for (uint8_t i = 0; i < no_bytes; i++)
@@ -143,5 +116,8 @@ uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
     }
 
     else
+    {
         Serial.printf("CRC error detected:payload dropped");
+        return NULL;
+    }
 }

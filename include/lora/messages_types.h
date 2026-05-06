@@ -1,6 +1,6 @@
 
 #ifndef MESSAGES_TYPES_H
-#define MESSAGES_TYPE_H
+#define MESSAGES_TYPES_H
 #include <stdint.h>
 
 typedef struct
