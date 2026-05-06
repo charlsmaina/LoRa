@@ -20,6 +20,7 @@ static uint8_t op_mode_before_dio0_fired = STDBY_MODE;
 
 void radio_ini(void)
 {
+
     lora_hardware_reset();
     lora_spi_init();
     set_lora_mode();
@@ -29,7 +30,9 @@ void radio_ini(void)
     set_ocp();
     reg_group_init();
     interrupts_pins_setup();
-    writeRegister(REG_IRQ__FLAGS_MASK, ~RELEVANT_MASKS);
+    writeRegister(REG_IRQ__FLAGS_MASK, ~(RELEVANT_MASKS));
+    receive();
+    printf("Radio initialization done:\n");
 }
 static dio0_callback tx_done_cb = nullptr;
 static dio0_callback rx_done_cb = nullptr;
@@ -38,14 +41,17 @@ void radio_init(dio0_callback tx_done_handler, dio0_callback rx_done_handler)
 {
     tx_done_cb = tx_done_handler;
     rx_done_cb = rx_done_handler;
+    Serial.printf("TX done and rx done handlers set:\n");
 }
 
 void radio_control_tick(void)
 {
+
     if (poll_dio0())
     {
         switch (op_mode_before_dio0_fired)
         {
+
         case TX_MODE:
             writeRegister(REG_IRQ_FLAGS, TX_DONE_MASK);
             if (tx_done_cb)
@@ -84,6 +90,20 @@ void transmit(uint8_t transmit_buffer[], uint8_t len)
 
     writeRegister(REG_LORA_PAYLOAD_LENGTH, i);
     set_Mode(TX_MODE);
+
+    /*Confirmation:*/
+    set_Mode(TX_MODE);
+
+    // verify TX mode set
+    uint8_t mode = readRegister(REG_OP_MODE);
+    uint8_t irq_flags = readRegister(REG_IRQ_FLAGS);
+    Serial.printf("TX OpMode: 0x%02X\n", mode); // expect 0x83
+    Serial.printf("TX IRQ flags: 0x%02X\n", irq_flags);
+
+    // wait briefly and check again
+    delay(500);
+    irq_flags = readRegister(REG_IRQ_FLAGS);
+    Serial.printf("TX IRQ flags after 500ms: 0x%02X\n", irq_flags); // bit 3 should be set
 }
 
 void receive(void)
@@ -94,6 +114,13 @@ void receive(void)
 
     set_Mode(RX_CONT_MODE);
     Serial.printf("\nListening...");
+    // verify
+    uint8_t mode = readRegister(REG_OP_MODE);
+    uint8_t dio_map = readRegister(REG_DIO_MAPPING1);
+    uint8_t irq_mask = readRegister(REG_IRQ__FLAGS_MASK);
+    Serial.printf("OpMode: 0x%02X\n", mode);       // expect 0x85
+    Serial.printf("DIO map: 0x%02X\n", dio_map);   // expect 0x00
+    Serial.printf("IRQ mask: 0x%02X\n", irq_mask); // expect 0x
 }
 
 uint8_t *extract_fifo_payload(uint8_t rx_buffer[], uint8_t *no_bytes)

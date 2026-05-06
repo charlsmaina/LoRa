@@ -38,7 +38,17 @@ bool lora_spi_init(void)
     SPI.begin(PIN_SCK, PIN_MISO, PIN_MOSI, PIN_NSS);
     SPI.setFrequency(1000000);
 
-    (readRegister(REG_REG_VERSION) == 0x12) ? Serial.printf("SPI is ok!\n") : Serial.printf("SPI is faulty!");
+    uint8_t reg_spi = readRegister(REG_REG_VERSION);
+    if (reg_spi == 0X12)
+    {
+        Serial.printf("SPI OK!\n");
+        return true;
+    }
+    else
+    {
+        Serial.printf("SPI broken!\n");
+        return false;
+    }
 }
 
 void set_Mode(lora_mode_t mode)
@@ -100,7 +110,7 @@ void reg_group_init(void)
     lora_reg_config(REG_PREAMBLE_LSB, LORA_PREAMBLE_LSB);
     lora_reg_config(REG_SYNC_WORD, LORA_SYNC_WORD);
 }
-static bool dio0_fired = false;
+static volatile bool dio0_fired = false;
 
 void IRAM_ATTR dio0_isr(void)
 {
@@ -111,7 +121,9 @@ bool poll_dio0(void)
 {
     if (dio0_fired)
     {
+        Serial.printf("DI00 fired\n");
         dio0_fired = false;
+
         return true;
     }
     return false;

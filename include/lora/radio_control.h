@@ -1,6 +1,8 @@
 #ifndef RADIO_CONTROL_H
 
 #define RADIO_CONTROL_H
+
+void radio_ini(void);
 void radio_control_tick(void);
 typedef void (*dio0_callback)(void);
 

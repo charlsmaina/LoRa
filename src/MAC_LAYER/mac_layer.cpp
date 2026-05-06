@@ -20,9 +20,11 @@ void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rr
     payload_mac_aodv_cb = payload_handler;
     rreq_mac_aodv_cb = rreq_handler;
     rrep_mac_aodv_cb = rrep_handler;
+
     radio_init(mac_on_tx_done, mac_on_rx_done);
+    radio_ini();
 }
-static void mac_forward(uint8_t *buf, uint8_t len)
+void mac_forward(uint8_t *buf, uint8_t len)
 {
     switch (buf[0])
     {
@@ -34,6 +36,7 @@ static void mac_forward(uint8_t *buf, uint8_t len)
         break;
     case RREQ_MSG:
         transmit(buf, sizeof(RREQ_MESSAGE_t));
+        Serial.printf("RREQ forwarded to radio layer to be sent\n");
         break;
 
     default:
@@ -99,6 +102,7 @@ void mac_send_payload(uint8_t *buf, uint8_t len)
 }
 void mac_send_rreq(RREQ_MESSAGE_t *rreq)
 {
+    Serial.printf("MAC layer sending a route request:\n");
     rreq->type = RREQ_MSG;
     memcpy(tx_buffer, rreq, sizeof(RREQ_MESSAGE_t));
     mac_forward(tx_buffer, sizeof(RREQ_MESSAGE_t));
@@ -108,4 +112,9 @@ void mac_send_rrep(RREP_MESSAGE_t *rrep)
     rrep->type = RREQ_MSG;
     memcpy(tx_buffer, rrep, sizeof(RREP_MESSAGE_t));
     mac_forward(tx_buffer, sizeof(RREP_MESSAGE_t));
+}
+
+void mac_tick(void)
+{
+    radio_control_tick();
 }

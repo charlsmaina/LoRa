@@ -14,6 +14,7 @@ void mac_forward(uint8_t *buf, uint8_t len);
 void mac_send_payload(uint8_t *buf, uint8_t len);
 void mac_send_rreq(RREQ_MESSAGE_t *rreq);
 void mac_send_rrep(RREP_MESSAGE_t *rrep);
+void mac_tick(void);
 
 typedef enum
 {
