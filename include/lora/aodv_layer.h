@@ -8,43 +8,7 @@
 #define NODE_C 0X02
 #define NODE_D 0X03
 
-typedef struct
-{
-    uint8_t type;
-    uint8_t flags;
-    uint8_t hop_count;
-    uint8_t rreq_id;
-    char dest_ip;
-    uint8_t dest_seq_number;
-    uint8_t ori_ip;
-    uint8_t ori_seq_number;
-} RREQ_MESSAGE_t;
-
-typedef struct
-{
-    uint8_t type;
-    uint8_t flags;
-    uint8_t hop_count;
-    uint8_t dest_ip;
-    uint8_t dest_seq_number;
-    uint8_t ori_ip;
-    uint8_t lifetime;
-} RREP_MESSAGE_t;
-
-typedef struct
-{
-    uint8_t dest_ip;
-    uint8_t route[3] = {0};
-    uint8_t dest_seq_no;
-} OUTER_NODES_t;
-
-typedef struct
-{
-
-    uint8_t node_seq;
-    uint8_t node_ip;
-    OUTER_NODES_t route[3];
-
-} ROUTE_TABLE_ENTRY_t;
+uint8_t next_hop_route_table_lookup(uint8_t dest);
+void aodv_sendpayload(uint8_t dest, uint8_t *data, uint8_t len);
 
 #endif

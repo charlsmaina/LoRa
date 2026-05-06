@@ -10,6 +10,11 @@ typedef void (*rrep_cb_t)(RREP_MESSAGE_t *rrep);
 
 void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rrep_handler);
 
+void mac_forward(uint8_t *buf, uint8_t len);
+void mac_send_payload(uint8_t *buf, uint8_t len);
+void mac_send_rreq(RREQ_MESSAGE_t *rreq);
+void mac_send_rrep(RREP_MESSAGE_t *rrep);
+
 typedef enum
 {
     PAYLOAD_MSG,

@@ -28,17 +28,13 @@ typedef struct
 
 typedef struct
 {
-    uint8_t dest_ip;
-    uint8_t route[3] = {0};
-    uint8_t dest_seq_no;
-} OUTER_NODES_t;
-
-typedef struct
-{
 
     uint8_t node_seq;
     uint8_t node_ip;
-    OUTER_NODES_t route[3];
+    uint8_t next_hop;
+    uint8_t dest_ip;
+    uint8_t dest_seq_no;
+    bool valid;
 
 } ROUTE_TABLE_ENTRY_t;
 

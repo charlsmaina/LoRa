@@ -5,6 +5,7 @@
 #define MAX_FRAME_SIZE 125
 
 static uint8_t rx_buffer[MAX_FRAME_SIZE];
+static uint8_t tx_buffer[MAX_FRAME_SIZE];
 
 static payload_cb_t payload_mac_aodv_cb = NULL;
 static rreq_cb_t rreq_mac_aodv_cb = NULL;
@@ -21,7 +22,24 @@ void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rr
     rrep_mac_aodv_cb = rrep_handler;
     radio_init(mac_on_tx_done, mac_on_rx_done);
 }
+static void mac_forward(uint8_t *buf, uint8_t len)
+{
+    switch (buf[0])
+    {
+    case PAYLOAD_MSG:
+        transmit(buf, len);
+        break;
+    case RREP_MSG:
+        transmit(buf, sizeof(RREP_MESSAGE_t));
+        break;
+    case RREQ_MSG:
+        transmit(buf, sizeof(RREQ_MESSAGE_t));
+        break;
 
+    default:
+        break;
+    }
+}
 static void mac_on_rx_done(void)
 {
     uint8_t no_bytes = 0;
@@ -71,4 +89,23 @@ static void mac_on_rx_done(void)
 static void mac_on_tx_done(void)
 {
     receive();
+}
+
+void mac_send_payload(uint8_t *buf, uint8_t len)
+{
+    tx_buffer[0] = PAYLOAD_MSG;
+    memcpy(tx_buffer + 1, buf, len);
+    mac_forward(tx_buffer, len + 1);
+}
+void mac_send_rreq(RREQ_MESSAGE_t *rreq)
+{
+    rreq->type = RREQ_MSG;
+    memcpy(tx_buffer, rreq, sizeof(RREQ_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(RREQ_MESSAGE_t));
+}
+void mac_send_rrep(RREP_MESSAGE_t *rrep)
+{
+    rrep->type = RREQ_MSG;
+    memcpy(tx_buffer, rrep, sizeof(RREP_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(RREP_MESSAGE_t));
 }
