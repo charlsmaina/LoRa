@@ -13,37 +13,45 @@ static rrep_cb_t rrep_mac_aodv_cb = NULL;
 static void mac_on_tx_done(void);
 static void mac_on_rx_done(void);
 
-void mac_radio_callbacks()
-{
-    radio_callbacks_init(mac_on_tx_done, mac_on_rx_done);
-}
-
-void mac_aodv_callbacks(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rrep_handler)
+void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rrep_handler)
 {
 
     payload_mac_aodv_cb = payload_handler;
     rreq_mac_aodv_cb = rreq_handler;
     rrep_mac_aodv_cb = rrep_handler;
+    radio_init(mac_on_tx_done, mac_on_rx_done);
 }
 
-uint8_t *pay_load_type(void)
+static void mac_on_rx_done(void)
 {
-    return check_payload_type(extract_fifo_payload(rx_buffer));
-}
-
-uint8_t *check_payload_type(uint8_t *payload_pointer)
-{
-    switch (*payload_pointer)
+    uint8_t no_bytes = 0;
+    uint8_t *payload_pointer = extract_fifo_payload(rx_buffer, &no_bytes);
+    if (!payload_pointer)
+        return;
+    switch (payload_pointer[0])
     {
     case PAYLOAD_MSG:
-        /*Call a aodv function to handle payload*/
+        /*Call a aodv call back function to handle payload*/
+        if (payload_mac_aodv_cb)
+        {
+            payload_mac_aodv_cb(payload_pointer, no_bytes);
+        }
 
         break;
     case RREQ_MSG:
         /*Call a aodv funcuint8_t message_frame(void);tion to handle rreq*/
+        if (rreq_mac_aodv_cb)
+        {
+            rreq_mac_aodv_cb((RREQ_MESSAGE_t *)payload_pointer);
+        }
+
         break;
     case RREP_MSG:
-        /*Call a aodv function to handle rrep*/
+        if (rrep_mac_aodv_cb)
+        {
+            rrep_mac_aodv_cb((RREP_MESSAGE_t *)payload_pointer);
+        }
+
         break;
     case RERR_MSG:
         /*Call a aodv function to handle rerr*/
@@ -59,42 +67,6 @@ uint8_t *check_payload_type(uint8_t *payload_pointer)
         Serial.printf("Undefined payload type:\n");
         break;
     }
-}
-
-uint8_t message_frame(defined_messages_t type, uint8_t *routetable)
-{
-    switch (type)
-    {
-    case PAYLOAD_MSG:
-        /*Write a payload message frame */
-
-        break;
-    case RREQ_MSG:
-        /*Write a route request message frame */
-        break;
-    case RREP_MSG:
-        /*Write a route reply message frame*/
-        break;
-    case RERR_MSG:
-        /*Write a route error message frame*/
-        break;
-    case RTS_MSG:
-        /*write a route RTS message frame*/
-        break;
-    case RTR_MSG:
-        /*Write a RTR handler*/
-        break;
-
-    default:
-        break;
-    }
-}
-static void mac_on_rx_done(void)
-{
-    uint8_t *buf = extract_fifo_payload(rx_buffer);
-    if (!buf)
-        return;
-    check_payload_type(buf);
 }
 static void mac_on_tx_done(void)
 {

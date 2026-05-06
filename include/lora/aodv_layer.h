@@ -3,10 +3,10 @@
 #ifndef AODV_CONTROL_H
 #define AODV_CONTROL_H
 #include <stdint.h>
-#define A 0X00
-#define B 0X01
-#define C 0X02
-#define D 0X03
+#define NODE_A 0X00
+#define NODE_B 0X01
+#define NODE_C 0X02
+#define NODE_D 0X03
 
 typedef struct
 {

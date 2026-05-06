@@ -34,7 +34,7 @@ void radio_ini(void)
 static dio0_callback tx_done_cb = nullptr;
 static dio0_callback rx_done_cb = nullptr;
 
-void radio_callbacks_init(dio0_callback tx_done_handler, dio0_callback rx_done_handler)
+void radio_init(dio0_callback tx_done_handler, dio0_callback rx_done_handler)
 {
     tx_done_cb = tx_done_handler;
     rx_done_cb = rx_done_handler;
@@ -96,9 +96,9 @@ void receive(void)
     Serial.printf("\nListening...");
 }
 
-uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
+uint8_t *extract_fifo_payload(uint8_t rx_buffer[], uint8_t *no_bytes)
 {
-    uint8_t no_bytes = readRegister(REG_RX_NB_BYTES);
+    *no_bytes = readRegister(REG_RX_NB_BYTES);
     uint8_t rx_current_address = readRegister(REG_FIFO_RX_CURRENT_ADDR);
     writeRegister(REG_FIFO_ADDR_PTR, rx_current_address);
 
@@ -107,7 +107,7 @@ uint8_t *extract_fifo_payload(uint8_t rx_buffer[])
     if (!(reg_irq_flags & PAYLOAD_CRC_ERROR_MASK))
     {
         Serial.printf("\nNo CRC error detected");
-        for (uint8_t i = 0; i < no_bytes; i++)
+        for (uint8_t i = 0; i < *no_bytes; i++)
         {
             rx_buffer[i] = readRegister(REG_FIFO);
         }
