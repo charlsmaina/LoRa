@@ -19,8 +19,9 @@ typedef struct
 } pending_packet_t;
 static void aodv_queue(uint8_t dest, uint8_t *data, uint8_t len);
 static void aodv_drain_queue(void);
-
 static volatile uint8_t node_sequence_number = 0;
+static volatile uint8_t RECENT_RREQ_UNIQUE_ID = 0;
+
 static void add_route_to_sender(uint8_t dest, uint8_t next_hop, uint8_t hop_count);
 
 static void payload_handler(uint8_t *buf, uint8_t len);
