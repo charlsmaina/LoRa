@@ -10,6 +10,20 @@
 #define MY_NODE_ID NODE_B
 #define MAX_ROUTES 6
 
+typedef enum
+{
+    PENDING_RREQ,
+    PENDING_RREP,
+    PENDING_ACK,
+    AODV_IDLE,
+
+} pending_task_t;
+volatile pending_task_t pending_task = AODV_IDLE;
+
+static RREP_MESSAGE_t pending_rrep;
+static RREQ_MESSAGE_t pending_rreq;
+static ACK_MESSAGE_t pending_ack;
+
 typedef struct
 {
     uint8_t dest;
@@ -17,13 +31,14 @@ typedef struct
     uint8_t len;
     bool valid;
 } pending_packet_t;
+
 static void aodv_queue(uint8_t dest, uint8_t *data, uint8_t len);
 static void aodv_drain_queue(void);
+
 static volatile uint8_t node_sequence_number = 0;
 static volatile uint32_t RECENT_RREQ_UNIQUE_ID = 0;
 static volatile uint32_t RECENT_RREP_UNIQUE_ID = 0;
 static volatile uint32_t RECENT_ACK_UNIQUE_ID = 0;
-static volatile bool cts_flag = false;
 
 static void add_route_to_sender(uint8_t dest, uint8_t next_hop, uint8_t hop_count);
 
@@ -34,7 +49,7 @@ static void rrep_handler(RREP_MESSAGE_t *rrep);
 static void rts_handler(RTS_MESSAGE_t *rts);
 static void cts_handler(CTS_MESSAGE_t *cts);
 static void ack_handler(ACK_MESSAGE_t *ack);
-void static wait_for_handshake(uint8_t dest_ip, uint8_t src_ip);
+static void wait_for_handshake(uint8_t dest_ip, uint8_t src_ip);
 
 void static display_message_delivered(ACK_MESSAGE_t *ack);
 
@@ -91,6 +106,7 @@ static void aodv_send_rreq(uint8_t dest)
 {
     Serial.printf("Sending a route request:\n");
     RREQ_MESSAGE_t rreq;
+
     rreq.type = RREQ_MSG;
     rreq.rreq_id = esp_random();
     rreq.dest_ip = dest;
@@ -107,28 +123,30 @@ static void aodv_send_rreq(uint8_t dest)
 /*rrep payload population by aodv layer*/
 static void aodv_send_rrep(RREQ_MESSAGE_t *rreq)
 {
-    RREP_MESSAGE_t rrep;
-    rrep.type = RREP_MSG;
-    rrep.flags = 0;
-    rrep.hop_count = 0;
-    rrep.dest_ip = MY_NODE_ID;
 
-    rrep.dest_seq_number = 2;
-    rrep.ori_ip = rreq->ori_ip;
-    rrep.lifetime = 0;
-    rrep.next_hop = next_hop_route_table_lookup(rreq->ori_ip);
-    rrep.rrep_id = esp_random();
+    pending_rrep.type = RREP_MSG;
+    pending_rrep.flags = 0;
+    pending_rrep.hop_count = 0;
+    pending_rrep.dest_ip = MY_NODE_ID;
+
+    pending_rrep.dest_seq_number = 2;
+    pending_rrep.ori_ip = rreq->ori_ip;
+    pending_rrep.lifetime = 0;
+
+    if ((pending_rrep.next_hop = next_hop_route_table_lookup(rreq->ori_ip)) == 0XFF)
+    {
+        pending_rrep.next_hop = rreq->ori_ip;
+    }
+
+    pending_rrep.rrep_id = esp_random();
 
     Serial.printf("Sending a route reply  from %s:\n", XSTR(MY_NODE_ID));
 
-    RECENT_RREP_UNIQUE_ID = rrep.rrep_id;
-    wait_for_handshake(rrep.next_hop, rrep.dest_ip);
+    RECENT_RREP_UNIQUE_ID = pending_rrep.rrep_id;
 
-    while (cts_flag)
-    {
-        cts_flag = false;
-        mac_send_rrep(&rrep);
-    }
+    pending_task = PENDING_RREP;
+
+    wait_for_handshake(pending_rrep.next_hop, pending_rrep.dest_ip);
 }
 
 /*void static aodv_send_rts(uint8_t dest_ip, uint8_t src_ip);*/
@@ -195,7 +213,8 @@ static void payload_handler(uint8_t *buf, uint8_t len)
         return;
     }*/
 
-    Serial.printf("Payload received, len %0X\nData:\n", len);
+    Serial.printf("Payload received, len %d\nData:\n", len);
+
     for (uint8_t i = 0; i < len; i++)
     {
         Serial.printf("%c", buf[i]);
@@ -206,7 +225,7 @@ static void payload_handler(uint8_t *buf, uint8_t len)
 /*---------------------------------------------rreq handler------------------------*/
 static void rreq_handler(RREQ_MESSAGE_t *rreq)
 {
-    Serial.printf("HAnndle rreq:\n");
+    Serial.printf("Handle rreq:\n");
     add_route_to_sender(rreq->dest_ip, rreq->src_ip, rreq->hop_count);
     Serial.printf("Destination: 0X%02X\n Origin: 0X%02X\n", rreq->dest_ip, rreq->ori_ip);
 
@@ -261,32 +280,50 @@ static void rrep_handler(RREP_MESSAGE_t *rrep)
 /*------------------------------------rts handler --------------------------------------*/
 static void rts_handler(RTS_MESSAGE_t *rts)
 {
+    Serial.printf("Resolving a rts :\n");
+    printf("Node 0X%02X is asking if it can send:\n", rts->src_ip);
     if (rts->dest_ip == MY_NODE_ID)
     {
-        CTS_MESSAGE_t *cts;
+        CTS_MESSAGE_t cts;
 
-        cts->dest_ip = rts->src_ip;
-        cts->src_ip = rts->dest_ip;
+        cts.dest_ip = rts->src_ip;
+        cts.src_ip = rts->dest_ip;
 
-        mac_send_cts(cts);
+        mac_send_cts(&cts);
     }
     else
+    {
+        Serial.printf("Am not the destination so back off:\n");
         return;
+    }
 }
 /*-----------------------------------cts handler------------------------------------------*/
 static void cts_handler(CTS_MESSAGE_t *cts)
 {
+    Serial.printf("Clear to send message received:\n");
     if (cts->dest_ip == MY_NODE_ID)
     {
-        cts_flag = true;
+        switch (pending_task)
+        {
+        case PENDING_RREQ:
+            mac_send_rreq(&pending_rreq);
+            break;
+
+        case PENDING_RREP:
+            mac_send_rrep(&pending_rrep);
+            break;
+        case PENDING_ACK:
+            mac_send_ack(&pending_ack);
+            break;
+        default:
+            Serial.printf("No pending task detected:\n");
+            break;
+        }
     }
     else
     {
         /*back off for some time */
-        int start_time = millis();
-        int timeout = 5000;
-        while ((millis() - start_time) < timeout)
-            ;
+        delay(1000);
         return;
     }
 }
@@ -332,17 +369,17 @@ static void aodv_drain_queue(void)
 }
 
 /*---------------handshake mechanism to minimize interference---------------------*/
-void wait_for_handshake(uint8_t dest_ip, uint8_t src_ip)
+static void wait_for_handshake(uint8_t dest_ip, uint8_t src_ip)
 {
-    while (!cts_flag)
-    {
-        RTS_MESSAGE_t *rts;
-        rts->dest_ip = dest_ip;
-        rts->src_ip = src_ip;
-        mac_send_rts(rts);
-    }
-}
+    Serial.printf("Initiating handshake:\n");
 
+    RTS_MESSAGE_t rts;
+
+    rts.dest_ip = dest_ip;
+    rts.src_ip = src_ip;
+    Serial.printf("Sending rts\n");
+    mac_send_rts(&rts);
+}
 void static display_message_delivered(ACK_MESSAGE_t *ack)
 {
 }

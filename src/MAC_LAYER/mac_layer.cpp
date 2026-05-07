@@ -37,23 +37,29 @@ void mac_forward(uint8_t *buf, uint8_t len)
         transmit(buf, len);
         break;
     case RREP_MSG:
-        transmit(buf, len);
+        Serial.printf("RREP sent back to the requester:\n");
+        transmit(buf, sizeof(RREP_MESSAGE_t));
+
         break;
     case RREQ_MSG:
-        transmit(buf, len);
         Serial.printf("RREQ forwarded to radio layer to be sent\n");
+        transmit(buf, sizeof(RREQ_MESSAGE_t));
+
         break;
     case RTS_MSG:
-        transmit(buf, len);
         Serial.printf("A RTS message forwaded to radio layer by MAC\n");
+        transmit(buf, sizeof(RTS_MESSAGE_t));
+
         break;
     case CTS_MSG:
-        transmit(buf, len);
         Serial.printf("A CTS message forwaded for transmit\n");
+        transmit(buf, sizeof(CTS_MESSAGE_t));
+
         break;
     case ACK_MSG:
-        transmit(buf, len);
         Serial.printf("An acknowledgement message forwaded to radio layer by MAC:\n");
+        transmit(buf, sizeof(ACK_MESSAGE_t));
+
         break;
 
     default:
@@ -144,35 +150,37 @@ void mac_send_rreq(RREQ_MESSAGE_t *rreq)
 
     rreq->type = RREQ_MSG;
 
-    tx_buffer[0] = RREQ_MSG;
-    memcpy(tx_buffer + 1, rreq, sizeof(RREQ_MESSAGE_t));
-    mac_forward(tx_buffer, sizeof(RREQ_MESSAGE_t) + 1);
+    memcpy(tx_buffer, rreq, sizeof(RREQ_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(RREQ_MESSAGE_t));
 }
 void mac_send_rrep(RREP_MESSAGE_t *rrep)
 {
     rrep->type = RREP_MSG;
-    tx_buffer[0] = RREP_MSG;
-    memcpy(tx_buffer + 1, rrep, sizeof(RREP_MESSAGE_t));
-    mac_forward(tx_buffer, sizeof(RREP_MESSAGE_t) + 1);
+
+    memcpy(tx_buffer, rrep, sizeof(RREP_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(RREP_MESSAGE_t));
 }
 void mac_send_rts(RTS_MESSAGE_t *rts)
 {
-    tx_buffer[0] = RTS_MSG;
-    memcpy(tx_buffer + 1, rts, sizeof(RTS_MESSAGE_t));
-    mac_forward(tx_buffer, sizeof(RTS_MESSAGE_t) + 1);
+    Serial.printf("MAC received request t send RTS:\n");
+    rts->type = RTS_MSG;
+    Serial.printf("RTS about to compy and forward to MAC\n");
+    memcpy(tx_buffer, rts, sizeof(RTS_MESSAGE_t));
+    Serial.printf("RTS copied:\n");
+    mac_forward(tx_buffer, sizeof(RTS_MESSAGE_t));
 }
 void mac_send_cts(CTS_MESSAGE_t *cts)
 {
-    tx_buffer[0] = CTS_MSG;
-    memcpy(tx_buffer + 1, cts, sizeof(CTS_MESSAGE_t));
-    mac_forward(tx_buffer, sizeof(RTS_MESSAGE_t) + 1);
+    cts->type = CTS_MSG;
+    memcpy(tx_buffer, cts, sizeof(CTS_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(RTS_MESSAGE_t));
 }
 
 void mac_send_ack(ACK_MESSAGE_t *ack)
 {
-    tx_buffer[0] = ACK_MSG;
-    memcpy(tx_buffer + 1, ack, sizeof(ACK_MESSAGE_t));
-    mac_forward(tx_buffer, sizeof(ACK_MESSAGE_t) + 1);
+    ack->type = ACK_MSG;
+    memcpy(tx_buffer, ack, sizeof(ACK_MESSAGE_t));
+    mac_forward(tx_buffer, sizeof(ACK_MESSAGE_t));
 }
 
 void mac_tick(void)

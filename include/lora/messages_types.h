@@ -45,17 +45,20 @@ typedef struct
 
 typedef struct
 {
+    uint8_t type;
     uint8_t src_ip;
     uint8_t dest_ip;
 } RTS_MESSAGE_t;
 
 typedef struct
 {
+    uint8_t type;
     uint8_t src_ip;
     uint8_t dest_ip;
 } CTS_MESSAGE_t;
 typedef struct
 {
+    uint8_t type;
     uint8_t src_ip;
     uint8_t dest_ip;
     uint32_t ack_id;
