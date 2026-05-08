@@ -29,6 +29,11 @@ void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rr
 
     radio_init(mac_on_tx_done, mac_on_rx_done);
 }
+
+int16_t mac_get_rssi()
+{
+    return radio_get_rssi();
+}
 void mac_forward(uint8_t *buf, uint8_t len)
 {
     switch (buf[0])
@@ -88,6 +93,7 @@ static void mac_on_rx_done(void)
         if (rreq_mac_aodv_cb)
         {
             Serial.printf("RREQ message detected:\n");
+
             rreq_mac_aodv_cb((RREQ_MESSAGE_t *)payload_pointer);
         }
 
@@ -162,11 +168,11 @@ void mac_send_rrep(RREP_MESSAGE_t *rrep)
 }
 void mac_send_rts(RTS_MESSAGE_t *rts)
 {
-    Serial.printf("MAC received request t send RTS:\n");
+    Serial.printf("MAC received request to send RTS\n");
     rts->type = RTS_MSG;
-    Serial.printf("RTS about to compy and forward to MAC\n");
+
     memcpy(tx_buffer, rts, sizeof(RTS_MESSAGE_t));
-    Serial.printf("RTS copied:\n");
+
     mac_forward(tx_buffer, sizeof(RTS_MESSAGE_t));
 }
 void mac_send_cts(CTS_MESSAGE_t *cts)

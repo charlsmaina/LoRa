@@ -17,6 +17,12 @@
 #define RELEVANT_MASKS (RX_DONE_MASK | TX_DONE_MASK | PAYLOAD_CRC_ERROR_MASK | CAD_DONE_MASK | CAD_DETECTED_MASK)
 
 static uint8_t op_mode_before_dio0_fired = STDBY_MODE;
+int16_t last_packet_rssi = 0;
+
+int16_t radio_get_rssi()
+{
+    return last_packet_rssi;
+}
 
 void radio_ini(void)
 {
@@ -119,6 +125,8 @@ uint8_t *extract_fifo_payload(uint8_t rx_buffer[], uint8_t *no_bytes)
             rx_buffer[i] = readRegister(REG_FIFO);
         }
         Serial.printf("\nExtraction done:\n");
+        last_packet_rssi = readRegister(REG_PKT_RSSI_VALUE) - 164;
+        Serial.printf("RSSI of last packet: %d\n", last_packet_rssi);
         return rx_buffer;
     }
 

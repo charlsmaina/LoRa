@@ -19,6 +19,7 @@ void mac_send_rrep(RREP_MESSAGE_t *rrep);
 void mac_send_rts(RTS_MESSAGE_t *rts);
 void mac_send_cts(CTS_MESSAGE_t *cts);
 void mac_send_ack(ACK_MESSAGE_t *ack);
+int16_t mac_get_rssi();
 
 void mac_tick(void);
 
