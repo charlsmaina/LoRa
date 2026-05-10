@@ -17,9 +17,9 @@
 #define RELEVANT_MASKS (RX_DONE_MASK | TX_DONE_MASK | PAYLOAD_CRC_ERROR_MASK | CAD_DONE_MASK | CAD_DETECTED_MASK)
 
 static uint8_t op_mode_before_dio0_fired = STDBY_MODE;
-int16_t last_packet_rssi = 0;
+volatile int last_packet_rssi = 0;
 
-int16_t radio_get_rssi()
+int radio_get_rssi()
 {
     return last_packet_rssi;
 }

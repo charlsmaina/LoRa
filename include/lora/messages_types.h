@@ -16,13 +16,21 @@ typedef struct __attribute__((packed)) /*Prevents padding when you cast*/
     uint8_t src_ip;
 } RREQ_MESSAGE_t;
 
+typedef struct
+{
+    uint8_t type;
+    uint8_t dest_ip;
+    uint8_t src_ip;
+    uint8_t data[240];
+} PAYLOAD_MESSAGE_t;
+
 typedef struct __attribute__((packed))
 {
     uint8_t type;
     uint8_t flags;
     uint8_t hop_count;
     uint8_t dest_ip;
-    uint8_t next_hop;
+
     uint8_t ori_seq_number;
     uint8_t ori_ip;
     uint8_t lifetime;
@@ -45,7 +53,7 @@ typedef struct __attribute__((packed))
 
     uint8_t dest_ip;
     uint8_t next_hop;
-    uint16_t next_hop_RSSI;
+    int next_hop_RSSI;
     bool valid;
     uint8_t dest_sequence_number;
     uint8_t hop_count;

@@ -30,7 +30,7 @@ void mac_init(payload_cb_t payload_handler, rreq_cb_t rreq_handler, rrep_cb_t rr
     radio_init(mac_on_tx_done, mac_on_rx_done);
 }
 
-int16_t mac_get_rssi()
+int mac_get_rssi()
 {
     return radio_get_rssi();
 }
@@ -144,11 +144,11 @@ static void mac_on_tx_done(void)
     receive();
 }
 
-void mac_send_payload(uint8_t *buf, uint8_t len)
+void mac_send_payload(PAYLOAD_MESSAGE_t *payload, uint8_t len)
 {
-    tx_buffer[0] = PAYLOAD_MSG;
-    memcpy(tx_buffer + 1, buf, len);
-    mac_forward(tx_buffer, len + 1);
+    payload->type = PAYLOAD_MSG;
+    memcpy(tx_buffer, payload, len);
+    mac_forward(tx_buffer, len);
 }
 void mac_send_rreq(RREQ_MESSAGE_t *rreq)
 {

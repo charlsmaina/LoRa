@@ -7,7 +7,7 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
-#define MY_NODE_ID NODE_A
+#define MY_NODE_ID NODE_B
 #define MAX_ROUTES 6
 
 typedef enum
@@ -83,11 +83,16 @@ uint8_t next_hop_route_table_lookup(uint8_t dest)
 /*Application layer uses this function to send payload*/
 void aodv_sendpayload(uint8_t dest, uint8_t *data, uint8_t len)
 {
+    PAYLOAD_MESSAGE_t payload;
+    payload.dest_ip = dest;
+    payload.src_ip = MY_NODE_ID;
+    memcpy(payload.data, data, len);
+
     Serial.printf("Payload_sender called:\n");
     uint8_t next_hop = next_hop_route_table_lookup(dest);
     if (next_hop != 0XFF)
     {
-        mac_send_payload(data, len);
+        mac_send_payload(&payload, len);
         printf("Route found:\n");
     }
     else
@@ -123,19 +128,22 @@ static void aodv_send_rreq(uint8_t dest)
 /*rrep payload population by aodv layer*/
 static void aodv_send_rrep(RREQ_MESSAGE_t *rreq)
 {
-    Serial.printf("AODV caaled to send a route reply\n");
+    Serial.printf("AODV called to send a route reply\n");
     pending_rrep.type = RREP_MSG;
     pending_rrep.flags = 0;
-    pending_rrep.hop_count = 0;
+    pending_rrep.hop_count = 1;
     pending_rrep.dest_ip = rreq->ori_ip;
 
     pending_rrep.ori_seq_number = 0;
     pending_rrep.ori_ip = MY_NODE_ID;
     pending_rrep.lifetime = 0;
+    pending_rrep.src_ip = MY_NODE_ID;
 
-    if ((pending_rrep.next_hop = next_hop_route_table_lookup(rreq->ori_ip)) == 0XFF)
+    uint8_t next_hop;
+
+    if ((next_hop = next_hop_route_table_lookup(rreq->ori_ip)) == 0XFF)
     {
-        pending_rrep.next_hop = rreq->ori_ip;
+        next_hop = rreq->ori_ip;
     }
 
     current_node.RECENT_RREP_UNIQUE_ID = esp_random();
@@ -146,7 +154,7 @@ static void aodv_send_rrep(RREQ_MESSAGE_t *rreq)
     pending_task = PENDING_RREP;
     Serial.printf("A route reply message is kept pending to wait for handshake\n");
 
-    wait_for_handshake(pending_rrep.next_hop, MY_NODE_ID);
+    wait_for_handshake(next_hop, MY_NODE_ID);
 }
 
 /*void static aodv_send_rts(uint8_t dest_ip, uint8_t src_ip);*/
@@ -203,6 +211,7 @@ static void update_route_table_due_to_rreq(RREQ_MESSAGE_t *rreq)
 
 static void update_route_table_due_to_rrep(RREP_MESSAGE_t *rrep)
 {
+    Serial.printf("Updating the route table due to a RREP...\n");
     for (uint8_t i = 0; i < MAX_ROUTES; i++)
     {
         if (!(route_table[i].valid))
@@ -211,9 +220,10 @@ static void update_route_table_due_to_rrep(RREP_MESSAGE_t *rrep)
             route_table[i].next_hop = rrep->src_ip;
             route_table[i].next_hop_RSSI = mac_get_rssi();
             route_table[i].dest_sequence_number = rrep->ori_seq_number;
+            route_table[i].hop_count = rrep->hop_count;
             route_table[i].valid = true;
 
-            Serial.printf("Route to 0X%02X created at 0X%02X:\n", route_table[i].dest_ip, MY_NODE_ID);
+            Serial.printf("Reverse route to 0X%02X created at 0X%02X:\n", route_table[i].dest_ip, MY_NODE_ID);
             Serial.printf("Destination:0X%02X\nNext hop:0X%02X\nHops to destination:0X%02X\nLink RSSI to next hop:%d\n", route_table[i].dest_ip, route_table[i].next_hop, route_table[i].hop_count, route_table[i].next_hop_RSSI);
             return;
         }
@@ -259,9 +269,9 @@ static void rreq_handler(RREQ_MESSAGE_t *rreq)
     Serial.printf("Destination ip:: 0X%02X\nOrigin ip: 0X%02X\n", rreq->dest_ip, rreq->ori_ip);
 
     Serial.printf("Current node ip::0X%02X\n", MY_NODE_ID);
-    if (rreq->dest_ip == MY_NODE_ID)
+    if (rreq->dest_ip == MY_NODE_ID && rreq->rreq_id != current_node.RECENT_RREQ_UNIQUE_ID)
     {
-
+        current_node.RECENT_RREQ_UNIQUE_ID = rreq->rreq_id;
         Serial.printf("\nRREQ at destination\n");
         aodv_send_rrep(rreq);
     }
@@ -276,6 +286,7 @@ static void rreq_handler(RREQ_MESSAGE_t *rreq)
         else
         {
             rreq->hop_count++;
+            rreq->src_ip = MY_NODE_ID;
             mac_send_rreq(rreq);
         }
     }
@@ -293,7 +304,7 @@ static void rrep_handler(RREP_MESSAGE_t *rrep)
     else
     {
 
-        Serial.printf("Route reply detected:\n");
+        Serial.printf("Route reply forwarded to RREP handler:\n");
         update_route_table_due_to_rrep(rrep);
 
         if (rrep->dest_ip == MY_NODE_ID)
@@ -304,6 +315,7 @@ static void rrep_handler(RREP_MESSAGE_t *rrep)
         else
         {
             /*forward the route reply*/
+            rrep->src_ip = MY_NODE_ID;
             mac_send_rrep(rrep);
         }
     }
