@@ -84,7 +84,7 @@ static void mac_on_rx_done(void)
         if (payload_mac_aodv_cb)
         {
             printf("Payload received:\n");
-            payload_mac_aodv_cb(payload_pointer, no_bytes);
+            payload_mac_aodv_cb((PAYLOAD_MESSAGE_t *)payload_pointer, no_bytes);
         }
 
         break;
@@ -141,6 +141,7 @@ static void mac_on_rx_done(void)
 }
 static void mac_on_tx_done(void)
 {
+    Serial.printf("TX done\n");
     receive();
 }
 

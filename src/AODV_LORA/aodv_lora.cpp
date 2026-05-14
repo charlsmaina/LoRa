@@ -15,6 +15,7 @@ typedef enum
     PENDING_RREQ,
     PENDING_RREP,
     PENDING_ACK,
+
     AODV_IDLE,
 
 } pending_task_t;
@@ -35,14 +36,14 @@ typedef struct
     bool valid;
 } pending_packet_t;
 
-static void aodv_queue(uint8_t dest, uint8_t *data, uint8_t len);
+static void aodv_queue_payload(PAYLOAD_MESSAGE_t *payload, uint8_t len);
 static void aodv_drain_queue(void);
 
 static void update_route_table_due_to_rreq(RREQ_MESSAGE_t *rreq);
 static void update_route_table_due_to_rrep(RREP_MESSAGE_t *rrep);
 
 /*Handlers of different kind of messages once rx done is triggered*/
-static void payload_handler(uint8_t *buf, uint8_t len);
+static void payload_handler(PAYLOAD_MESSAGE_t *payload, uint8_t len);
 static void rreq_handler(RREQ_MESSAGE_t *rreq);
 static void rrep_handler(RREP_MESSAGE_t *rrep);
 static void rts_handler(RTS_MESSAGE_t *rts);
@@ -66,6 +67,7 @@ void aodv_control_tick(void)
 void aodv_init(void)
 {
     mac_init(payload_handler, rreq_handler, rrep_handler, rts_handler, cts_handler, ack_handler);
+    Serial.printf("Current node 0x%02X:\n", MY_NODE_ID);
 }
 
 uint8_t next_hop_route_table_lookup(uint8_t dest)
@@ -92,14 +94,15 @@ void aodv_sendpayload(uint8_t dest, uint8_t *data, uint8_t len)
     uint8_t next_hop = next_hop_route_table_lookup(dest);
     if (next_hop != 0XFF)
     {
-        mac_send_payload(&payload, len);
+        payload.next_hop = next_hop;
+        mac_send_payload(&payload, len + 4);
         printf("Route found:\n");
     }
     else
     {
         Serial.printf("Route not found:\n");
-        aodv_queue(dest, data, len); // buffer it
-        aodv_send_rreq(dest);        // discover route
+        aodv_queue_payload(&payload, len); // buffer it
+        aodv_send_rreq(dest);              // discover route
         /*Start process of sending a route request*/
     }
 }
@@ -233,60 +236,79 @@ static void update_route_table_due_to_rrep(RREP_MESSAGE_t *rrep)
 /*Different kinds of messages handlers*/
 /*----------------------------payload handler------------------------------------*/
 
-static void payload_handler(uint8_t *buf, uint8_t len)
+static void payload_handler(PAYLOAD_MESSAGE_t *payload, uint8_t len)
 {
     Serial.printf("Payload handler called:\n");
-    /*uint8_t dest = buf[1];
+    Serial.printf("Payload next hop intended node: 0x%02X\n", payload->next_hop);
 
-    if (dest != MY_NODE_ID)
-
+    if (payload->next_hop != MY_NODE_ID)
     {
-        uint8_t next_hop = next_hop_route_table_lookup(dest);
-        if (next_hop)
-        {
-            mac_forward(buf, len);
-        }
-
+        Serial.printf("Am not supposed to listen to this payload: so drop it:\n...silently");
         return;
-    }*/
-
-    Serial.printf("Payload received, len %d\nData:\n", len);
-
-    for (uint8_t i = 0; i < len; i++)
-    {
-        Serial.printf("%c", buf[i]);
     }
-    Serial.println();
-    /*Send acknowledgement signal*/
+    else
+    {
+
+        if (payload->dest_ip == MY_NODE_ID)
+        {
+            Serial.printf("Payload at destination:\n, Receiven payload len %d\nData:\nReceived payload\n", len);
+
+            for (uint8_t i = 0; i < len - 4; i++)
+            {
+                Serial.printf("%c", payload->data[i]);
+            }
+            Serial.println();
+            Serial.printf("Send acknowledgement:\n");
+            /*-------------------Send acknowledgement --------------------------*/
+        }
+        else
+        {
+            uint8_t next_hop = next_hop_route_table_lookup(payload->dest_ip);
+            if (next_hop != 0XFF)
+            {
+                Serial.printf("Route for payload exists\n");
+                payload->src_ip = MY_NODE_ID;
+                payload->next_hop = next_hop;
+                mac_forward((uint8_t *)payload, len);
+            }
+            else
+            {
+                Serial.printf("Am not supposed to handle this payload:back off and drop it\n");
+            }
+        }
+    }
 }
 
 /*---------------------------------------------rreq handler------------------------*/
 static void rreq_handler(RREQ_MESSAGE_t *rreq)
 {
     Serial.printf("RREQ handler called\n");
-    update_route_table_due_to_rreq(rreq);
+    Serial.printf("Source of RREQ: 0x%02X\n", rreq->src_ip);
+    Serial.printf("RREQ destination: 0x%02X\n", rreq->dest_ip);
 
-    Serial.printf("Destination ip:: 0X%02X\nOrigin ip: 0X%02X\n", rreq->dest_ip, rreq->ori_ip);
-
-    Serial.printf("Current node ip::0X%02X\n", MY_NODE_ID);
-    if (rreq->dest_ip == MY_NODE_ID && rreq->rreq_id != current_node.RECENT_RREQ_UNIQUE_ID)
+    if (rreq->ori_ip == MY_NODE_ID || rreq->rreq_id == current_node.RECENT_RREQ_UNIQUE_ID)
     {
-        current_node.RECENT_RREQ_UNIQUE_ID = rreq->rreq_id;
-        Serial.printf("\nRREQ at destination\n");
-        aodv_send_rrep(rreq);
+        Serial.printf("Re-hearing my own  or an already served RREQ\n");
+        Serial.printf("Don't respond to that RREQ\n");
     }
     else
     {
-        /*Prevent two nodes from entering in a route request cycle*/
-        if (rreq->rreq_id == current_node.RECENT_RREQ_UNIQUE_ID)
+        update_route_table_due_to_rreq(rreq);
+        Serial.printf("Destination ip:: 0X%02X\nOrigin ip: 0X%02X\n", rreq->dest_ip, rreq->ori_ip);
+        Serial.printf("Current node ip::0X%02X\n", MY_NODE_ID);
+        if (rreq->dest_ip == MY_NODE_ID)
         {
-            Serial.printf("Route request already handled:\n");
-            return;
+            current_node.RECENT_RREQ_UNIQUE_ID = rreq->rreq_id;
+            Serial.printf("\nRREQ at destination\n");
+            aodv_send_rrep(rreq);
         }
         else
         {
+
+            Serial.printf("Forward RREQ\n");
             rreq->hop_count++;
             rreq->src_ip = MY_NODE_ID;
+            delay(5000);
             mac_send_rreq(rreq);
         }
     }
@@ -334,6 +356,7 @@ static void rts_handler(RTS_MESSAGE_t *rts)
 
         cts.dest_ip = rts->src_ip;
         cts.src_ip = rts->dest_ip;
+        delay(1000);
 
         mac_send_cts(&cts);
     }
@@ -395,25 +418,30 @@ static void ack_handler(ACK_MESSAGE_t *ack)
 
 /*AODV queus*/
 
-static pending_packet_t pending = {.valid = false};
+static PAYLOAD_MESSAGE_t pending_payload;
+static volatile bool pendingPayload = false;
+static uint8_t pendingPayload_len = 0;
 
-static void aodv_queue(uint8_t dest, uint8_t *data, uint8_t len)
+static void aodv_queue_payload(PAYLOAD_MESSAGE_t *payload, uint8_t len)
 {
+    pendingPayload = true;
     Serial.printf("Queu and buffer the data\n");
-    pending.dest = dest;
-    pending.len = len;
-    pending.valid = true;
-    memcpy(pending.buf, data, len);
+    pending_payload.dest_ip = payload->dest_ip;
+    pending_payload.next_hop = 0;
+    pending_payload.src_ip = MY_NODE_ID;
+    memcpy(pending_payload.data, payload->data, len);
+    pendingPayload_len = len;
 }
 
 static void aodv_drain_queue(void)
 {
-    if (pending.valid)
+    if (pendingPayload)
     {
-
-        mac_send_payload(pending.buf, pending.len);
+        pending_payload.next_hop = next_hop_route_table_lookup(pending_payload.dest_ip);
+        mac_send_payload(&pending_payload, pendingPayload_len + 4);
         Serial.printf("Payload sent:\n");
-        pending.valid = false;
+        pendingPayload = false;
+        pendingPayload_len = 0;
     }
 }
 
@@ -422,7 +450,7 @@ static void wait_for_handshake(uint8_t dest_ip, uint8_t src_ip)
 {
     Serial.printf("Initiating handshake:\n");
     RTS_MESSAGE_t rts;
-    aodv_init();
+
     rts.dest_ip = dest_ip;
     rts.src_ip = src_ip;
     Serial.printf("Sending rts\n");

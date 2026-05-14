@@ -106,7 +106,7 @@ void receive(void)
     writeRegister(REG_DIO_MAPPING1, DIO0_MAP_RX_DONE);
 
     set_Mode(RX_CONT_MODE);
-    Serial.printf("\nListening...");
+    Serial.printf("\nListening\n...\n");
 }
 
 uint8_t *extract_fifo_payload(uint8_t rx_buffer[], uint8_t *no_bytes)

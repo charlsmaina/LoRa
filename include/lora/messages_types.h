@@ -21,6 +21,7 @@ typedef struct
     uint8_t type;
     uint8_t dest_ip;
     uint8_t src_ip;
+    uint8_t next_hop;
     uint8_t data[240];
 } PAYLOAD_MESSAGE_t;
 
