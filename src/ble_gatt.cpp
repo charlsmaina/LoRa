@@ -10,5 +10,5 @@ void ble_gatt_init(const char *device_name)
     adv->setScanResponse(true);                        /*Tells the advertiser to include extra data in its response when a scanner actively queries it*/
     BLEDevice::startAdvertising();
 
-    Serial.printf("[BLE] advertising as %s/n", device_name);
+    Serial.printf("[BLE] advertising as %s\n", device_name);
 }

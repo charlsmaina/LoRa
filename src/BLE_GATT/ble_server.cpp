@@ -3,6 +3,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include "../../include/lora/ble_server.h"
 
 #define SERVICE_UUID "12345678-1234-1234-1234-123456789abc" /*indentifies a unique service*/
 #define CHAR_TX_UUID "12345678-1234-1234-1234-123456789abd" /*phone writes*/
@@ -13,7 +14,6 @@ static bool deviceConnected = false;
 
 /*Define a write characteristic callback typedef*/
 
-typedef void (*OnMessageReceied)(const char *msg, uint8_t len);
 static OnMessageReceied _onMessageReceived = nullptr;
 
 class TXcallbacks : public BLECharacteristicCallbacks
