@@ -7,7 +7,7 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
-#define MY_NODE_ID NODE_B
+#define MY_NODE_ID NODE_A
 #define MAX_ROUTES 6
 
 typedef enum

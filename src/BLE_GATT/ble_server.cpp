@@ -14,7 +14,7 @@ static bool deviceConnected = false;
 
 /*Define a write characteristic callback typedef*/
 
-static OnMessageReceied _onMessageReceived = nullptr;
+static OnMessageReceived _onMessageReceived = nullptr;
 
 class TXcallbacks : public BLECharacteristicCallbacks
 {
@@ -41,22 +41,25 @@ class ServerCallbacks : public BLEServerCallbacks
     }
 };
 
-void ble_init(OnMessageReceied cb)
+void ble_init(OnMessageReceived cb)
 {
     _onMessageReceived = cb;
     BLEDevice::init("LORA_NODE_A");
     BLEServer *server = BLEDevice::createServer();
 
+    server->setCallbacks(new ServerCallbacks());
+
     BLEService *service = server->createService(SERVICE_UUID);
-    BLECharacteristic *tchar = service->createCharacteristic(
+    BLECharacteristic *txchar = service->createCharacteristic(
         CHAR_TX_UUID,
         BLECharacteristic::PROPERTY_WRITE
 
     );
-
+    txchar->setCallbacks(new TXcallbacks());
     rxCharacteristic = service->createCharacteristic(
-        CHAR_TX_UUID,
+        CHAR_RX_UUID,
         BLECharacteristic::PROPERTY_NOTIFY);
+
     rxCharacteristic->addDescriptor(new BLE2902);
     service->start();
     BLEDevice::startAdvertising();
