@@ -6,9 +6,13 @@
 /*For printing macros*/
 #define STR(x) #x
 #define XSTR(x) STR(x)
+#define TOA_MS 300
+#define CONTENTION_WINDOW 500
 
 #define MY_NODE_ID NODE_A
 #define MAX_ROUTES 6
+
+static aodv_to_app aodv_to_ble_app = nullptr;
 
 typedef enum
 {
@@ -64,8 +68,9 @@ void aodv_control_tick(void)
     mac_tick();
 }
 
-void aodv_init(void)
+void aodv_init(aodv_to_app aodv_to_main)
 {
+    aodv_to_ble_app = aodv_to_main;
     mac_init(payload_handler, rreq_handler, rrep_handler, rts_handler, cts_handler, ack_handler);
     Serial.printf("Current node 0x%02X:\n", MY_NODE_ID);
 }
@@ -110,7 +115,14 @@ void aodv_sendpayload(uint8_t dest, uint8_t *data, uint8_t len)
 /*Different control messages: only sent by  either dest or orig node:*/
 static void aodv_send_rreq(uint8_t dest)
 {
+    uint32_t backoff;
+
     Serial.printf("Sending a route request:\n");
+    Serial.printf("Random backoff to minimize collision:\n");
+    backoff = esp_random() % CONTENTION_WINDOW;
+    Serial.printf("Backing off for %d ms\n", backoff + TOA_MS);
+    delay(backoff + TOA_MS);
+
     RREQ_MESSAGE_t rreq;
 
     rreq.type = RREQ_MSG;
@@ -258,6 +270,12 @@ static void payload_handler(PAYLOAD_MESSAGE_t *payload, uint8_t len)
                 Serial.printf("%c", payload->data[i]);
             }
             Serial.println();
+            Serial.printf("Forward message to app\n");
+            if (aodv_to_ble_app)
+            {
+                aodv_to_ble_app(payload->data, payload->dest_ip);
+            }
+
             Serial.printf("Send acknowledgement:\n");
             /*-------------------Send acknowledgement --------------------------*/
         }

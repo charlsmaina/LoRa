@@ -3,30 +3,23 @@
 #include "../include/lora/aodv_layer.h"
 #include "../include/lora/ble_server.h"
 
-void on_ble_message(const char *msg, uint8_t len)
+void on_ble_message(uint8_t dest, const char *msg, uint8_t len)
 {
   Serial.printf("Message arrived in the network: to be sent\n");
-  Serial.printf("[BLE-MESH] %s", msg);
-  /*Message format from BLE , 0xNN : MESSAGE, MESSAGE_DEST:MESSGE*/
-  const char *colon = strchr(msg, ':');
-  /*Search for : pattern in msg and return a pointer to it*/
-  if (colon == nullptr)
-  {
-    Serial.printf("Invalid BLE mesh message format:\n");
-    return;
-  }
-  else
-  {
-    uint8_t dest = (uint8_t)(strtol(msg, nullptr, 16));
-  }
+  Serial.printf("Message: %s\nLength:%d\nDestination:0x%02X\n", msg, len, dest);
+  aodv_sendpayload(dest, (uint8_t *)msg, len);
+}
+
+void pass_to_app(uint8_t *msg, uint8_t dest)
+{
+  ble_notify((const char *)msg, strlen());
 }
 
 void setup()
 {
   Serial.begin(115200);
   ble_init(on_ble_message);
-
-  aodv_init();
+  aodv_init(pass_to_app);
 }
 
 void loop()

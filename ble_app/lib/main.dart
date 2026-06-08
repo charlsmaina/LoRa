@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
+import 'home_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MeshChatApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MeshChatApp extends StatelessWidget {
+  const MeshChatApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'LoRa Mesh',
+      title: 'LoRa Mesh Chat',
       debugShowCheckedModeBanner: false,
-      home: const ChatScreen(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
     );
   }
 }
