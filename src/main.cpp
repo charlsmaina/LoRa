@@ -12,7 +12,10 @@ void on_ble_message(uint8_t dest, const char *msg, uint8_t len)
 
 void pass_to_app(uint8_t *msg, uint8_t dest)
 {
-  ble_notify((const char *)msg, strlen());
+  char framed[256];
+  sniprintf(framed, sizeof(framed), "0x%02X:%s", dest, (const char *)msg);
+
+  ble_notify(framed, strlen(framed));
 }
 
 void setup()

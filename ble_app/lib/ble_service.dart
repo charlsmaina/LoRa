@@ -6,7 +6,7 @@ class BleService {
   BluetoothCharacteristic? _txChar;
   BluetoothCharacteristic? _rxChar;
 
-  final String targetName = "LORA_NODE_A";
+  final String targetName = "LORA_NODE_B";
   final String serviceUuid = "12345678-1234-1234-1234-123456789abc";
   final String txUuid = "12345678-1234-1234-1234-123456789abd";
   final String rxUuid = "12345678-1234-1234-1234-123456789abe";
@@ -14,18 +14,19 @@ class BleService {
   Function()? onDisconnected;
   Function(String nodeId)? onConnected;
 
-  // Map of callbacks keyed by node id — each chat screen registers itself
-  // "0x21" → Base Camp handler, "0x22" → Climber 1 handler etc.
+  // per node message handlers — keyed by node id
   final Map<String, Function(String message)> _messageHandlers = {};
+
+  // ACK handler — fires with node id when ACK arrives
+  // wired from outside by whoever needs to update delivery status
+  Function(String nodeId)? onAckReceived;
 
   StreamSubscription? _disconnectSub;
 
-  // Chat screen calls this when it opens
   void registerHandler(String nodeId, Function(String message) handler) {
     _messageHandlers[nodeId] = handler;
   }
 
-  // Chat screen calls this when it closes
   void unregisterHandler(String nodeId) {
     _messageHandlers.remove(nodeId);
   }
@@ -80,8 +81,6 @@ class BleService {
     await _rxChar!.setNotifyValue(true);
     _rxChar!.lastValueStream.listen((value) {
       if (value.isNotEmpty) {
-        // incoming bytes are "0x21:Hello"
-        // convert to string and parse the prefix
         final raw = String.fromCharCodes(value);
         _routeIncoming(raw);
       }
@@ -89,24 +88,27 @@ class BleService {
   }
 
   void _routeIncoming(String raw) {
-    // find the first colon — same parsing as firmware does on send path
-    final colonIndex = raw.indexOf(':');
-    if (colonIndex == -1) return; // malformed, drop
+    // ACK format: "ACK:0x21"
+    if (raw.startsWith('ACK:')) {
+      final nodeId = raw.substring(4); // everything after "ACK:"
+      onAckReceived?.call(nodeId);
+      return;
+    }
 
-    final nodeId = raw.substring(0, colonIndex); // "0x21"
-    final message = raw.substring(colonIndex + 1); // "Hello"
+    // regular message format: "0x21:Hello"
+    final colonIndex = raw.indexOf(':');
+    if (colonIndex == -1) return;
+
+    final nodeId = raw.substring(0, colonIndex);
+    final message = raw.substring(colonIndex + 1);
 
     if (message.isEmpty) return;
 
-    // look up the registered handler for this node id
     final handler = _messageHandlers[nodeId];
-
     if (handler != null) {
-      // chat screen is open — deliver directly
       handler(message);
     } else {
-      // chat screen is not open — message still gets persisted
-      // by the home screen's background handler
+      // screen not open — background handler persists and badges
       _messageHandlers['background']?.call(raw);
     }
   }
@@ -121,8 +123,6 @@ class BleService {
     });
   }
 
-  // destination implicit from which chat screen sends
-  // format: "0x21:Hello" — firmware splits on first colon
   Future<void> sendMessage(String destination, String message) async {
     if (_txChar == null) return;
     final payload = '$destination:$message';

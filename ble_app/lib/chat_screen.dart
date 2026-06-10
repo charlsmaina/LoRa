@@ -6,7 +6,14 @@ class _Message {
   final String text;
   final bool isMe;
   final DateTime time;
-  _Message({required this.text, required this.isMe, required this.time});
+  bool delivered; // mutable — flips when ACK arrives
+
+  _Message({
+    required this.text,
+    required this.isMe,
+    required this.time,
+    this.delivered = false,
+  });
 }
 
 class ChatScreen extends StatefulWidget {
@@ -31,15 +38,18 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<_Message> _messages = [];
 
   @override
-  @override
   void initState() {
     super.initState();
     _loadHistory();
 
-    // register this screen for its node id
-    // BleService will route incoming messages here when this screen is open
+    // incoming message handler for this node's profile
     widget.ble.registerHandler(widget.nodeId, (message) {
-      final msg = _Message(text: message, isMe: false, time: DateTime.now());
+      final msg = _Message(
+        text: message,
+        isMe: false,
+        time: DateTime.now(),
+        delivered: true, // received messages are inherently delivered
+      );
       DatabaseHelper.instance.insertMessage(
         nodeId: widget.nodeId,
         text: message,
@@ -51,6 +61,21 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _scrollToBottom();
     });
+
+    // ACK handler — find last sent message to this node, flip delivered
+    widget.ble.onAckReceived = (nodeId) {
+      if (nodeId != widget.nodeId) return; // not for this screen
+      DatabaseHelper.instance.markLastDelivered(widget.nodeId);
+      setState(() {
+        // find last outgoing message and mark it delivered in memory
+        for (int i = _messages.length - 1; i >= 0; i--) {
+          if (_messages[i].isMe && !_messages[i].delivered) {
+            _messages[i].delivered = true;
+            break;
+          }
+        }
+      });
+    };
   }
 
   Future<void> _loadHistory() async {
@@ -62,6 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
             text: row['text'] as String,
             isMe: (row['is_me'] as int) == 1,
             time: DateTime.fromMillisecondsSinceEpoch(row['time'] as int),
+            delivered: (row['status'] as int) == 1,
           ),
         ),
       );
@@ -69,7 +95,6 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
   }
 
-  @override
   @override
   void dispose() {
     widget.ble.unregisterHandler(widget.nodeId);
@@ -82,7 +107,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    final msg = _Message(text: text, isMe: true, time: DateTime.now());
+    final msg = _Message(
+      text: text,
+      isMe: true,
+      time: DateTime.now(),
+      delivered: false, // starts undelivered — flips on ACK
+    );
 
     await DatabaseHelper.instance.insertMessage(
       nodeId: widget.nodeId,
@@ -91,8 +121,6 @@ class _ChatScreenState extends State<ChatScreen> {
       time: msg.time,
     );
 
-    // destination implicit from which chat screen we are in
-    // user never types it — appended silently as "0x21:hello"
     await widget.ble.sendMessage(widget.nodeId, text);
 
     setState(() {
@@ -228,12 +256,29 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(height: 3),
-            Text(
-              timeStr,
-              style: TextStyle(
-                fontSize: 10,
-                color: msg.isMe ? Colors.white54 : Colors.white38,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeStr,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: msg.isMe ? Colors.white54 : Colors.white38,
+                  ),
+                ),
+                // delivery tick — only on sent messages
+                if (msg.isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    msg.delivered
+                        ? Icons
+                              .done_all // double tick — delivered
+                        : Icons.done, // single tick — sent
+                    size: 12,
+                    color: msg.delivered ? Colors.tealAccent : Colors.white38,
+                  ),
+                ],
+              ],
             ),
           ],
         ),

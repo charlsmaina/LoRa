@@ -82,7 +82,7 @@ class ServerCallbacks : public BLEServerCallbacks
 void ble_init(OnMessageReceived cb)
 {
     _onMessageReceived = cb;
-    BLEDevice::init("LORA_NODE_A");
+    BLEDevice::init("LORA_NODE_C");
 
     BLEServer *server = BLEDevice::createServer();
     server->setCallbacks(new ServerCallbacks());

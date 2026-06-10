@@ -9,7 +9,7 @@
 #define TOA_MS 300
 #define CONTENTION_WINDOW 500
 
-#define MY_NODE_ID NODE_A
+#define MY_NODE_ID NODE_C
 #define MAX_ROUTES 6
 
 static aodv_to_app aodv_to_ble_app = nullptr;
