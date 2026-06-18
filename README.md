@@ -1,4 +1,1 @@
-# Overview
-
 This repo is an implementation of a decentralized communication system consisting of SX1276 LoRa trancevers, and ESP32 microcontroller. A routing protocol is built on top of LoRa to provide routing capability. More documentation to come!
-
