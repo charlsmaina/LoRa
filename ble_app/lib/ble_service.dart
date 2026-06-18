@@ -6,7 +6,7 @@ class BleService {
   BluetoothCharacteristic? _txChar;
   BluetoothCharacteristic? _rxChar;
 
-  final String targetName = "LORA_NODE_B";
+  final String targetName = "LORA_NODE_C";
   final String serviceUuid = "12345678-1234-1234-1234-123456789abc";
   final String txUuid = "12345678-1234-1234-1234-123456789abd";
   final String rxUuid = "12345678-1234-1234-1234-123456789abe";

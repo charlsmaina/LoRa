@@ -31,7 +31,6 @@ static RREQ_MESSAGE_t pending_rreq;
 static ACK_MESSAGE_t pending_ack;
 node_specific_info_t current_node;
 
-/*Stores the packet as a AODV works out the route discovery*/
 typedef struct
 {
     uint8_t dest;
@@ -270,13 +269,13 @@ static void payload_handler(PAYLOAD_MESSAGE_t *payload, uint8_t len)
                 Serial.printf("%c", payload->data[i]);
             }
             Serial.println();
+
             Serial.printf("Forward message to app\n");
             if (aodv_to_ble_app)
             {
                 aodv_to_ble_app(payload->data, payload->dest_ip);
             }
 
-            Serial.printf("Send acknowledgement:\n");
             /*-------------------Send acknowledgement --------------------------*/
         }
         else
@@ -298,13 +297,14 @@ static void payload_handler(PAYLOAD_MESSAGE_t *payload, uint8_t len)
 }
 
 /*---------------------------------------------rreq handler------------------------*/
+
 static void rreq_handler(RREQ_MESSAGE_t *rreq)
 {
     Serial.printf("RREQ handler called\n");
     Serial.printf("Source of RREQ: 0x%02X\n", rreq->src_ip);
     Serial.printf("RREQ destination: 0x%02X\n", rreq->dest_ip);
 
-    if (rreq->ori_ip == MY_NODE_ID || rreq->rreq_id == current_node.RECENT_RREQ_UNIQUE_ID)
+    if (rreq->ori_ip == MY_NODE_ID) ////removed rrreq id check
     {
         Serial.printf("Re-hearing my own  or an already served RREQ\n");
         Serial.printf("Don't respond to that RREQ\n");
@@ -318,6 +318,13 @@ static void rreq_handler(RREQ_MESSAGE_t *rreq)
         {
             current_node.RECENT_RREQ_UNIQUE_ID = rreq->rreq_id;
             Serial.printf("\nRREQ at destination\n");
+            Serial.printf("Check if the RREQ is coming from node B: ");
+            /*if (rreq->ori_ip == 0x21 || rreq->src_ip == 0x21)
+             {
+                 Serial.printf("Ignore RREQ from node B: with ori ip of 0x%02X\n");
+             }
+             else*/
+
             aodv_send_rrep(rreq);
         }
         else
@@ -362,6 +369,7 @@ static void rrep_handler(RREP_MESSAGE_t *rrep)
 }
 
 /*------------------------------------rts handler --------------------------------------*/
+
 static void rts_handler(RTS_MESSAGE_t *rts)
 {
     Serial.printf("Resolving a rts :\n");
@@ -384,6 +392,7 @@ static void rts_handler(RTS_MESSAGE_t *rts)
         return;
     }
 }
+
 /*-----------------------------------cts handler------------------------------------------*/
 static void cts_handler(CTS_MESSAGE_t *cts)
 {
