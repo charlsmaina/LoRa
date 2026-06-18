@@ -1,1 +1,3 @@
-This repo is an implementation of a decentralized communication system consisting of SX1276 LoRa trancevers, and ESP32 microcontroller. A routing protocol is built on top of LoRa to provide routing capability. More documentation to come!
+# Overview
+
+This repo oulines the implemntation process of a decentralized adhoc LoRa Mesh network that is used to provide a communication system that supports short messages sending between end usrs. Users can send a direct message to each other if they are reachable with a a single one hop direct link OR are reachable via other intermediary nodes. A node can dynamically search for a route to destination or help another node search for a route to destination. A BLE based messaging app serves as the UI. 
