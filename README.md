@@ -20,25 +20,22 @@
 
 . **Application layer** - This is divided into the BLE GATT client and BLE GATT servers and the main file which bundles everything together. BLE bridges communication between the app and the ESP32. BLE uses a GATT architecture to facilitate comunication between two devices using bluetooth. Think of GATT model as how bluetooth communication is conducted on a high level. The GATT model involves a GATT server and a GATT client. The GATT server is implemnted by a peripheral device that a central device can connect to. Think of a peripheral device as a device that advertises itself for other devices to connect to it , but it cannot initiate the connection. The GATT client makes the connection. The GATT model relies on services and characteristics. Services are a unique way to bundle related data or functionalities together. Within each service, there can be multiple characteristics which can be thought of as the actual data. Each service and characteristic has a unique indentifier. The GATT client can write , read or subscribe(receive notifications) to the characteristics defined by the GATT server. For deeper dive into how the application layer works. Click the link below.
   
-- [Application Layer]()
- 
+- [Application Layer](www.application)
 
- ## Hardware system
+## Hardware system
 
- - RF95W module
-  
-  **Front**
+- RF95W module
 
- ![rfm95w chip front](assets/rfm95_front.png)
+<table>
+<tr>
+<td><img src = "assets/rfm95_front.png" width = "300"></td>
 
-**Back**
-![rfm95w chip back](assets/rfm_back.png)
+<td><img src = "assets/rfm_back.png" width = "300> </td>
 
-**ESP8266 adapter board**
-![8266 adapter ](assets/8266_adapter.png)
+</tr>
 
-**LM2596 buck converter**
-![LM2596 buck converter](assets/LM2596.png)
+</table>
+
 
 ![lora modules on a perfboard](assets/2nodesOnperfboard.png)
 
@@ -49,3 +46,15 @@
 ![two chat interface](assets/twa_chat.jpg)
 
 ![two way messaging](assets/Pasted%20image.png)
+
+
+<table>
+  <tr>
+    <td><img src="assets/2nodesOnperfboard.png" width="300" alt="Node A"></td>
+    <td><img src="assets/3nodesystem.png" width="300" alt="Node B"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Node A</em></td>
+    <td align="center"><em>Node B</em></td>
+  </tr>
+</table>
