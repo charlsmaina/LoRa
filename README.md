@@ -46,6 +46,8 @@ decentralized ad hoc LoRa Mesh network that is used to provide a communication s
 </td>
 </tr>
 </table>
+
+## Firmware architecture
   
 1.**Physical layer** - Consists of the sx1276 driver that configures the LoRa chip via **direct register writing via SPI** and provides high level functions to upper layers to interact with the radio chip. The driver is written without reliance on third party LoRa libraries and follows the [Semtech sx1276 data sheet](https://www.mouser.com/datasheet/2/761/sx1276-1278113.pdf). The code for the driver is found in [sx1276 driver](src/SX1276/sx1276.cpp).
 
@@ -65,43 +67,39 @@ decentralized ad hoc LoRa Mesh network that is used to provide a communication s
 
 4.**Application layer** - This is divided into the BLE GATT client and BLE GATT servers and the main file which bundles everything together. BLE bridges communication between the app and the ESP32. BLE uses a GATT architecture to facilitate comunication between two devices using bluetooth. Think of the  GATT model as how bluetooth communication is conducted on a high level. The GATT model involves a GATT server and a GATT client. The GATT server is implemnted by a peripheral device that a central device can connect to. Think of a peripheral device as a device that advertises itself for other devices to connect to it , but it cannot initiate the connection. The GATT client makes the connection. The GATT model relies on services and characteristics. Services are a unique way to bundle related data or functionalities together. Within each service, there can be multiple characteristics which can be thought of as the actual data. Each service and characteristic has a unique indentifier. The GATT client can write , read or subscribe(receive notifications) to the characteristics defined by the GATT server. For more details visit [ble_server.cpp](src/BLE_GATT/ble_server.cpp).
   
-
 - More details on the flutter app will be added soon.
 
 ## Hardware system
 
-RF95W module.
+RF95W module. -  The RFM95W module comes packed with a SX1276 LoRa tranceiver. The chip operates at 868MHz ISM band for LoRa communication and supports other modes like OOK and FSK. The chip pads have a width of 2mm width and hence populary available 2.54 width  cannot be used directly. The chip was soldered on an Esp8266 expansion board to enable soldering of 2.54 header pins.
 
 <table>
-
 <tr>
+<td><a  href = "assets/rfm95_front.png"><img src = "assets/rfm95_front.png" width = "200" alt =  "rfm95w front page"><br>
+<sub><b>RFM95W front-face</b></sub></a></td>
+<td><a href = "assets/rfm_back.png"><img src = "assets/rfm_back.png" width = "200" alt = "rfm95w back page"><br>
+<sub><b>RFM95W back-face</b></sub></a> </td>
+<td><a href = "assets/8266_adapter.png" ><img src = "assets/8266_adapter.png" width = "200" alt = "8266"><br>
+<sub><b>ESP8266 expansion board</b></sub></a></td>
+</tr>
+</table>
 
-<td><img src = "assets/rfm95_front.png" width = "300"></td>
-<td><img src = "assets/rfm_back.png" width = "300> </td>
+- I used a simple quaterwave monopole antenna made from copper wire. For 868Mhz the length of the antenna was calculated to 8.6 cm .  This approach has drawback in that it is not optimized for range due to lack of proper impedance matching and inefficient ground plane reference. Howerver it was sufficient to demostrate the system functionality.
+- An ESP32S-EU model was used as the microcontroler to run the Bluetooth and routing functionalities.
+- The power supply system consisted of two 4.5 Lithium ion batteries  and an LM2596 Buck converter to provide a regulated 3.3V voltage which provides both power supply to the RFM95W and the ESp32. SPI connection, interrupt pin and power supply connections weremade using a perfboard for faster prototyping.
+
+
+<table>
+<tr>
+<td><a  href = "assets/2nodesOnperfboard.png"><img src = "assets/2nodesOnperfboard.png" width = "500" alt =  "rfm95w front page"><br>
+<sub><b>ESP32 + RFM95W </b></sub></td></a>
+<td><a href = "assets/singleimage.png"><img src = "assets/singleimage.png" width = "300" alt = "rfm95w back page"><br>
+<sub><b>Single node </b></sub></a> </td>
 
 </tr>
-
 </table>
 
 
-![lora modules on a perfboard](assets/2nodesOnperfboard.png)
-
-![single node](assets/singleimage.png)
-
-![3 nodes](assets/3nodesystem.png)
-
-![two chat interface](assets/two_way_chat.jpg)
-
-![two way messaging](assets/Pasted%20image.png)
-
-
-<table>
-  <tr>
-    <td><img src="assets/2nodesOnperfboard.png" width="300" alt="Node A"></td>
-    <td><img src="assets/3nodesystem.png" width="300" alt="Node B"></td>
-  </tr>
-  <tr>
-    <td align="center"><em>Node A</em></td>
-    <td align="center"><em>Node B</em></td>
-  </tr>
-</table>
+## Author
+Charles Maina 
+Interested in embedded systems, and core low-level engineering(From semiconductor physics to the OS layer).
