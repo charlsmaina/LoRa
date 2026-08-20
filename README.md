@@ -40,8 +40,8 @@ decentralized ad hoc LoRa Mesh network that is used to provide a communication s
     </td>
 
 <td align="center" valign="bottom">
-  <a href="../LoRa/assets/system_blockD.png">
-    <img src="../LoRa/assets/system_blockD.png" width="300" alt="System Operation Overview">
+  <a href="assets/system_blockD.png">
+    <img src="assets/system_blockD.png" width="300" alt="System Operation Overview">
   </a><br>
   <sub><b>System operation overview</b></sub>
 </td>
