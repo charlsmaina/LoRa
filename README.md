@@ -12,15 +12,16 @@ decentralized ad hoc LoRa Mesh network that is used to provide a communication s
     <td align="center" valign="bottom">
       <a href="../LoRa/assets/chat_screen1.png">
         <img src="../LoRa/assets/chat_screen1.png" width="300" alt="chat screen1">
-      </a><br>
+      <br>
       <sub><b>Chat screen of two nodes communicating</b></sub>
+        </a>
     </td>
 
 <td align="center" valign="bottom">
   <a href="../LoRa/assets/3_node_system.png">
     <img src="../LoRa/assets/3_node_system.png" width="300" alt="3 node system">
-  </a><br>
-  <sub><b>3-node system setup</b></sub>
+  <br>
+  <sub><b>3-node system setup</b></sub></a>
 </td>
 </tr>
 </table>
