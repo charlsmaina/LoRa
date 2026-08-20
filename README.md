@@ -33,8 +33,8 @@ decentralized ad hoc LoRa Mesh network that is used to provide a communication s
 <table align="center">
   <tr>
     <td align="center" valign="bottom">
-      <a href="../LoRa/assets/layered_architecture.png">
-        <img src="../LoRa/assets/layered_architecture.png" width="300" alt="chat screen1">
+      <a href="assets/layered_architecture.png">
+        <img src="assets/layered_architecture.png" width="300" alt="chat screen1">
       </a><br>
       <sub><b>System software architcture</b></sub>
     </td>
